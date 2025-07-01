@@ -15,29 +15,14 @@ resource "aws_iam_role" "eks_cluster" {
   })
 
   tags = {
-    Name = "${var.name_prefix}-eks-cluster-role"
+    Name        = "${var.name_prefix}-eks-cluster-role"
+    Environment = var.name_prefix
   }
 }
 
 resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSClusterPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
   role       = aws_iam_role.eks_cluster.name
-}
-
-resource "aws_eks_cluster" "this" {
-  name     = "${var.name_prefix}-eks-cluster"
-  role_arn = aws_iam_role.eks_cluster.arn
-
-  vpc_config {
-    subnet_ids              = var.private_subnet_ids
-    endpoint_private_access = true
-    endpoint_public_access  = false
-    security_group_ids      = [aws_security_group.eks.id]
-  }
-
-  tags = {
-    Name = "${var.name_prefix}-eks-cluster"
-  }
 }
 
 resource "aws_security_group" "eks" {
@@ -61,8 +46,30 @@ resource "aws_security_group" "eks" {
   }
 
   tags = {
-    Name = "${var.name_prefix}-eks-sg"
+    Name        = "${var.name_prefix}-eks-sg"
+    Environment = var.name_prefix
   }
+}
+
+resource "aws_eks_cluster" "this" {
+  name     = "${var.name_prefix}-eks-cluster"
+  role_arn = aws_iam_role.eks_cluster.arn
+
+  vpc_config {
+    subnet_ids              = var.private_subnet_ids
+    endpoint_private_access = true
+    endpoint_public_access  = false
+    security_group_ids      = [aws_security_group.eks.id]
+  }
+
+  tags = {
+    Name        = "${var.name_prefix}-eks-cluster"
+    Environment = var.name_prefix
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSClusterPolicy
+  ]
 }
 
 resource "aws_iam_role" "eks_node" {
@@ -82,7 +89,8 @@ resource "aws_iam_role" "eks_node" {
   })
 
   tags = {
-    Name = "${var.name_prefix}-eks-node-role"
+    Name        = "${var.name_prefix}-eks-node-role"
+    Environment = var.name_prefix
   }
 }
 
@@ -92,6 +100,7 @@ resource "aws_iam_role_policy_attachment" "eks_worker_node_policies" {
     "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
   ])
+
   role       = aws_iam_role.eks_node.name
   policy_arn = each.key
 }
@@ -109,18 +118,22 @@ resource "aws_eks_node_group" "this" {
   }
 
   instance_types = ["t4g.micro"]
-  ami_type       = "Amazon Linux 2023 (kernel-6.1)"
+  ami_type       = "AL2_ARM_64" # Valid enum: AL2_x86_64, AL2_ARM_64, etc.
 
   tags = {
-    Name = "${var.name_prefix}-eks-nodes"
+    Name        = "${var.name_prefix}-eks-nodes"
+    Environment = var.name_prefix
   }
+
+  depends_on = [aws_iam_role_policy_attachment.eks_worker_node_policies]
 }
 
-# IAM Role for Service Account (IRSA)
 resource "aws_iam_openid_connect_provider" "this" {
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [var.oidc_thumbprint]
   url             = aws_eks_cluster.this.identity[0].oidc[0].issuer
+
+  depends_on = [aws_eks_cluster.this]
 }
 
 resource "aws_iam_role" "irsa_example" {
@@ -145,8 +158,11 @@ resource "aws_iam_role" "irsa_example" {
   })
 
   tags = {
-    Name = "${var.name_prefix}-irsa-example"
+    Name        = "${var.name_prefix}-irsa-example"
+    Environment = var.name_prefix
   }
+
+  depends_on = [aws_iam_openid_connect_provider.this]
 }
 
 resource "aws_iam_role_policy_attachment" "irsa_attach" {

@@ -10,7 +10,7 @@ variable "s3_bucket_name" {
 
 variable "acm_certificate_arn" {
   type        = string
-  description = "ACM certificate ARN for CloudFront HTTPS"
+  description = "ACM certificate ARN for CloudFront/ALB HTTPS"
 }
 
 variable "route53_zone_id" {
@@ -25,42 +25,27 @@ variable "subdomain_name" {
 
 variable "frontend_build_dir" {
   type        = string
-  description = "Path to the local build output directory (e.g., ./build)"
+  description = "Path to local frontend build output (e.g., ./build)"
 }
 
 variable "cognito_domain_prefix" {
   type        = string
-  description = "Prefix for the Cognito hosted domain"
+  description = "Prefix for Cognito hosted domain"
 }
 
 variable "cognito_callback_url" {
   type        = string
-  description = "URL where Cognito should redirect after login"
+  description = "OAuth2 redirect URI after Cognito login"
 }
 
 variable "cognito_logout_url" {
   type        = string
-  description = "URL to redirect to after logout"
-}
-
-variable "cognito_domain_prefix" {
-  type        = string
-  description = "Prefix for the Cognito hosted domain"
-}
-
-variable "cognito_callback_url" {
-  type        = string
-  description = "URL where Cognito should redirect after login"
-}
-
-variable "cognito_logout_url" {
-  type        = string
-  description = "URL to redirect to after logout"
+  description = "Redirect URI after logout"
 }
 
 variable "admin_email" {
   type        = string
-  description = "Email address for the default Cognito admin user"
+  description = "Email for initial Cognito admin user"
 }
 
 variable "admin_temp_password" {
@@ -70,7 +55,7 @@ variable "admin_temp_password" {
 
 variable "alb_arn" {
   type        = string
-  description = "ARN of the Application Load Balancer"
+  description = "ARN of the ALB"
 }
 
 variable "alb_target_group_arn" {

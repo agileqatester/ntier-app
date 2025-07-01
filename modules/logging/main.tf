@@ -1,7 +1,6 @@
 resource "aws_s3_bucket" "logs" {
-  bucket = "${var.name_prefix}-logging-bucket"
-
-  force_destroy = true
+  bucket         = "${var.name_prefix}-logging-bucket"
+  force_destroy  = true
 
   tags = {
     Name = "${var.name_prefix}-logs"
@@ -41,9 +40,18 @@ resource "aws_kinesis_stream" "log_stream" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "firehose" {
+  name              = "/aws/kinesisfirehose/${var.name_prefix}-firehose"
+  retention_in_days = 7
+
+  tags = {
+    Name = "${var.name_prefix}-firehose-logs"
+  }
+}
+
 resource "aws_opensearch_domain" "logs" {
-  domain_name           = "${var.name_prefix}-logs"
-  engine_version        = "OpenSearch_2.11"
+  domain_name    = "${var.name_prefix}-logs"
+  engine_version = "OpenSearch_2.11"
 
   cluster_config {
     instance_type  = "t3.small.search"
@@ -53,17 +61,19 @@ resource "aws_opensearch_domain" "logs" {
   ebs_options {
     ebs_enabled = true
     volume_size = 10
-    volume_type = "gp2"
+    volume_type = "gp3"
   }
 
   access_policies = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Effect    = "Allow",
-        Principal = "*",
-        Action    = "es:*",
-        Resource  = "arn:aws:es:${var.region}:${var.account_id}:domain/${var.name_prefix}-logs/*"
+        Effect = "Allow",
+        Principal = {
+          AWS = var.firehose_role_arn
+        },
+        Action = "es:*",
+        Resource = "arn:aws:es:${var.region}:${var.account_id}:domain/${var.name_prefix}-logs/*"
       }
     ]
   })
@@ -76,6 +86,11 @@ resource "aws_opensearch_domain" "logs" {
   tags = {
     Name = "${var.name_prefix}-opensearch"
   }
+
+  depends_on = [
+    aws_kinesis_stream.log_stream,
+    aws_s3_bucket.logs
+  ]
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "to_s3_and_es" {
@@ -92,19 +107,27 @@ resource "aws_kinesis_firehose_delivery_stream" "to_s3_and_es" {
     role_arn           = var.firehose_role_arn
     compression_format = "GZIP"
 
+    buffering_interval = 300
+    buffering_size     = 10
+
     cloudwatch_logging_options {
       enabled         = true
-      log_group_name  = "/aws/kinesisfirehose/${var.name_prefix}-firehose"
+      log_group_name  = aws_cloudwatch_log_group.firehose.name
       log_stream_name = "S3Delivery"
     }
 
     processing_configuration {
       enabled = false
     }
-
   }
 
   tags = {
     Name = "${var.name_prefix}-firehose"
   }
+
+  depends_on = [
+    aws_kinesis_stream.log_stream,
+    aws_s3_bucket.logs,
+    aws_cloudwatch_log_group.firehose
+  ]
 }

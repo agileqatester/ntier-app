@@ -6,6 +6,11 @@ variable "name_prefix" {
 variable "vpc_cidr" {
   description = "CIDR block for VPC"
   type        = string
+
+  validation {
+    condition     = can(cidrnetmask(var.vpc_cidr))
+    error_message = "vpc_cidr must be a valid CIDR block"
+  }
 }
 
 variable "public_subnet_cidrs" {
@@ -21,6 +26,11 @@ variable "private_subnet_cidrs" {
 variable "azs" {
   description = "List of availability zones"
   type        = list(string)
+
+  validation {
+    condition     = length(var.azs) > 0
+    error_message = "At least one AZ must be provided"
+  }
 }
 
 variable "region" {
@@ -29,6 +39,6 @@ variable "region" {
 }
 
 variable "vpc_cidr_blocks" {
-  description = "Allowed CIDR blocks for SG ingress"
+  description = "List of CIDRs allowed for SG ingress"
   type        = list(string)
 }

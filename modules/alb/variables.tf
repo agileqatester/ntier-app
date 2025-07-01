@@ -11,6 +11,11 @@ variable "vpc_id" {
 variable "public_subnet_ids" {
   description = "List of public subnet IDs"
   type        = list(string)
+
+  validation {
+    condition     = length(var.public_subnet_ids) > 0
+    error_message = "At least one public subnet must be provided."
+  }
 }
 
 variable "acm_certificate_arn" {

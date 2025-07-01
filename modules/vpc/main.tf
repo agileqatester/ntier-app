@@ -2,15 +2,19 @@ resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
+
   tags = {
-    Name = "${var.name_prefix}-vpc"
+    Name        = "${var.name_prefix}-vpc"
+    Environment = var.name_prefix
   }
 }
 
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
+
   tags = {
-    Name = "${var.name_prefix}-igw"
+    Name        = "${var.name_prefix}-igw"
+    Environment = var.name_prefix
   }
 }
 
@@ -20,8 +24,10 @@ resource "aws_subnet" "public" {
   cidr_block              = var.public_subnet_cidrs[count.index]
   availability_zone       = var.azs[count.index]
   map_public_ip_on_launch = true
+
   tags = {
-    Name = "${var.name_prefix}-public-${count.index + 1}"
+    Name        = "${var.name_prefix}-public-${count.index + 1}"
+    Environment = var.name_prefix
   }
 }
 
@@ -30,28 +36,38 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.this.id
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = var.azs[count.index]
+
   tags = {
-    Name = "${var.name_prefix}-private-${count.index + 1}"
+    Name        = "${var.name_prefix}-private-${count.index + 1}"
+    Environment = var.name_prefix
   }
+}
+
+resource "aws_eip" "nat" {
+  count = length(var.azs)
+
+  depends_on = [aws_internet_gateway.this]
 }
 
 resource "aws_nat_gateway" "this" {
   count         = length(var.azs)
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
-  tags = {
-    Name = "${var.name_prefix}-nat-${count.index + 1}"
-  }
-}
 
-resource "aws_eip" "nat" {
-  count = length(var.azs)
+  depends_on = [aws_eip.nat]
+
+  tags = {
+    Name        = "${var.name_prefix}-nat-${count.index + 1}"
+    Environment = var.name_prefix
+  }
 }
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
+
   tags = {
-    Name = "${var.name_prefix}-rt-public"
+    Name        = "${var.name_prefix}-rt-public"
+    Environment = var.name_prefix
   }
 }
 
@@ -70,8 +86,10 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table" "private" {
   count  = length(var.azs)
   vpc_id = aws_vpc.this.id
+
   tags = {
-    Name = "${var.name_prefix}-rt-private-${count.index + 1}"
+    Name        = "${var.name_prefix}-rt-private-${count.index + 1}"
+    Environment = var.name_prefix
   }
 }
 
@@ -88,7 +106,6 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
-# Security Group for Interface Endpoints
 resource "aws_security_group" "vpc_endpoints" {
   name        = "${var.name_prefix}-vpc-endpoint-sg"
   description = "Allow HTTPS to VPC endpoints"
@@ -109,18 +126,20 @@ resource "aws_security_group" "vpc_endpoints" {
   }
 
   tags = {
-    Name = "${var.name_prefix}-vpc-endpoints-sg"
+    Name        = "${var.name_prefix}-vpc-endpoints-sg"
+    Environment = var.name_prefix
   }
 }
 
-# VPC Endpoints
 resource "aws_vpc_endpoint" "s3_gateway" {
   vpc_id            = aws_vpc.this.id
   service_name      = "com.amazonaws.${var.region}.s3"
   route_table_ids   = aws_route_table.private[*].id
   vpc_endpoint_type = "Gateway"
+
   tags = {
-    Name = "${var.name_prefix}-vpce-s3"
+    Name        = "${var.name_prefix}-vpce-s3"
+    Environment = var.name_prefix
   }
 }
 
@@ -131,8 +150,10 @@ resource "aws_vpc_endpoint" "kinesis_firehose" {
   subnet_ids          = aws_subnet.private[*].id
   security_group_ids  = [aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
+
   tags = {
-    Name = "${var.name_prefix}-vpce-kinesis-firehose"
+    Name        = "${var.name_prefix}-vpce-kinesis-firehose"
+    Environment = var.name_prefix
   }
 }
 
@@ -143,8 +164,10 @@ resource "aws_vpc_endpoint" "opensearch" {
   subnet_ids          = aws_subnet.private[*].id
   security_group_ids  = [aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
+
   tags = {
-    Name = "${var.name_prefix}-vpce-opensearch"
+    Name        = "${var.name_prefix}-vpce-opensearch"
+    Environment = var.name_prefix
   }
 }
 
@@ -155,7 +178,9 @@ resource "aws_vpc_endpoint" "secretsmanager" {
   subnet_ids          = aws_subnet.private[*].id
   security_group_ids  = [aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
+
   tags = {
-    Name = "${var.name_prefix}-vpce-secretsmanager"
+    Name        = "${var.name_prefix}-vpce-secretsmanager"
+    Environment = var.name_prefix
   }
 }

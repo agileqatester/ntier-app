@@ -2,8 +2,7 @@ resource "aws_cognito_user_pool" "frontend" {
   name = "${var.name_prefix}-user-pool"
 
   auto_verified_attributes = ["email"]
-
-  username_attributes = ["email"]
+  username_attributes      = ["email"]
 
   password_policy {
     minimum_length    = 8
@@ -19,16 +18,15 @@ resource "aws_cognito_user_pool" "frontend" {
 }
 
 resource "aws_cognito_user_pool_client" "frontend" {
-  name         = "${var.name_prefix}-app-client"
-  user_pool_id = aws_cognito_user_pool.frontend.id
-  generate_secret = false
-  allowed_oauth_flows = ["code"]
-  allowed_oauth_scopes = ["email", "openid", "profile"]
+  name                                = "${var.name_prefix}-app-client"
+  user_pool_id                        = aws_cognito_user_pool.frontend.id
+  generate_secret                     = false
+  allowed_oauth_flows                = ["code"]
+  allowed_oauth_scopes              = ["email", "openid", "profile"]
   allowed_oauth_flows_user_pool_client = true
-  callback_urls = [var.cognito_callback_url]
-  logout_urls   = [var.cognito_logout_url]
-  supported_identity_providers = ["COGNITO"]
-
+  callback_urls                       = [var.cognito_callback_url]
+  logout_urls                         = [var.cognito_logout_url]
+  supported_identity_providers        = ["COGNITO"]
 }
 
 resource "aws_cognito_user_pool_domain" "frontend" {
@@ -36,11 +34,9 @@ resource "aws_cognito_user_pool_domain" "frontend" {
   user_pool_id = aws_cognito_user_pool.frontend.id
 }
 
-# existing S3 + CloudFront + Route53 + sync code remains unchanged
-
 resource "aws_s3_bucket" "frontend" {
-  bucket = var.s3_bucket_name
-  force_destroy = true
+  bucket         = var.s3_bucket_name
+  force_destroy  = true
 
   tags = {
     Name = "${var.name_prefix}-frontend-bucket"
@@ -50,22 +46,20 @@ resource "aws_s3_bucket" "frontend" {
 resource "aws_s3_bucket_website_configuration" "frontend" {
   bucket = aws_s3_bucket.frontend.bucket
 
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "index.html"
-  }
+  index_document { suffix = "index.html" }
+  error_document { key    = "index.html" }
 }
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-
+  bucket                  = aws_s3_bucket.frontend.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_cloudfront_origin_access_identity" "frontend" {
+  comment = "OAI for frontend bucket"
 }
 
 resource "aws_s3_bucket_policy" "frontend" {
@@ -78,15 +72,11 @@ resource "aws_s3_bucket_policy" "frontend" {
         Principal = {
           AWS = aws_cloudfront_origin_access_identity.frontend.iam_arn
         },
-        Action = "s3:GetObject",
+        Action   = "s3:GetObject",
         Resource = "${aws_s3_bucket.frontend.arn}/*"
       }
     ]
   })
-}
-
-resource "aws_cloudfront_origin_access_identity" "frontend" {
-  comment = "OAI for frontend bucket"
 }
 
 resource "aws_cloudfront_distribution" "frontend" {
@@ -104,19 +94,17 @@ resource "aws_cloudfront_distribution" "frontend" {
   default_root_object = "index.html"
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "s3-frontend"
-
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "s3-frontend"
     viewer_protocol_policy = "redirect-to-https"
-
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
   }
 
   viewer_certificate {
-    acm_certificate_arn            = var.acm_certificate_arn
-    ssl_support_method             = "sni-only"
-    minimum_protocol_version       = "TLSv1.2_2021"
+    acm_certificate_arn      = var.acm_certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   restrictions {
@@ -137,7 +125,7 @@ resource "aws_route53_record" "frontend_dns" {
 
   alias {
     name                   = aws_cloudfront_distribution.frontend.domain_name
-    zone_id                = "Z2FDTNDATAQYW2"
+    zone_id                = aws_cloudfront_distribution.frontend.hosted_zone_id
     evaluate_target_health = false
   }
 }
@@ -150,19 +138,21 @@ resource "null_resource" "frontend_deploy" {
   triggers = {
     always_run = timestamp()
   }
+
+  depends_on = [aws_s3_bucket_policy.frontend]
 }
 
-# === Cognito Users and Groups ===
 resource "aws_cognito_user" "admin" {
-  user_pool_id = aws_cognito_user_pool.frontend.id
-  username     = var.admin_email
+  user_pool_id        = aws_cognito_user_pool.frontend.id
+  username            = var.admin_email
   attributes = {
     email          = var.admin_email
     email_verified = true
   }
-  temporary_password = var.admin_temp_password
-  force_alias_creation = false
-  message_action = "SUPPRESS"
+
+  temporary_password     = var.admin_temp_password
+  message_action         = "SUPPRESS"
+  force_alias_creation   = false
 }
 
 resource "aws_cognito_group" "admin_group" {
@@ -175,10 +165,9 @@ resource "aws_cognito_group" "admin_group" {
 resource "aws_cognito_user_group_attachment" "admin_attachment" {
   user_pool_id = aws_cognito_user_pool.frontend.id
   username     = aws_cognito_user.admin.username
-  groups       = [aws_cognito_group.admin_group.name]
+  group_name   = aws_cognito_group.admin_group.name
 }
 
-# === ALB Listener Rule for Cognito Auth ===
 resource "aws_lb_listener" "https_with_cognito" {
   load_balancer_arn = var.alb_arn
   port              = 443
@@ -190,17 +179,12 @@ resource "aws_lb_listener" "https_with_cognito" {
     type = "authenticate-cognito"
 
     authenticate_cognito {
-      user_pool_arn       = aws_cognito_user_pool.frontend.arn
-      user_pool_client_id = aws_cognito_user_pool_client.frontend.id
-      user_pool_domain    = aws_cognito_user_pool_domain.frontend.domain
+      user_pool_arn            = aws_cognito_user_pool.frontend.arn
+      user_pool_client_id      = aws_cognito_user_pool_client.frontend.id
+      user_pool_domain         = aws_cognito_user_pool_domain.frontend.domain
       on_unauthenticated_request = "authenticate"
     }
-
-    order = 1
   }
 
-  default_action {
-    type             = "forward"
-    target_group_arn = var.alb_target_group_arn
-  }
+  depends_on = [aws_cognito_user_pool_client.frontend]
 }

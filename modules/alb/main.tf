@@ -1,9 +1,18 @@
 resource "aws_security_group" "alb" {
   name        = "${var.name_prefix}-alb-sg"
-  description = "Allow HTTPS traffic to ALB"
+  description = "Allow HTTP and HTTPS traffic to ALB"
   vpc_id      = var.vpc_id
 
   ingress {
+    description = "Allow HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
@@ -18,40 +27,47 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name = "${var.name_prefix}-alb-sg"
+    Name        = "${var.name_prefix}-alb-sg"
+    Environment = var.name_prefix
   }
 }
 
 resource "aws_lb" "this" {
   name               = "${var.name_prefix}-alb"
-  internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnet_ids
+  internal           = false
+
+  enable_deletion_protection = false
 
   tags = {
-    Name = "${var.name_prefix}-alb"
+    Name        = "${var.name_prefix}-alb"
+    Environment = var.name_prefix
   }
 }
 
-resource "aws_lb_target_group" "eks" {
-  name     = "${var.name_prefix}-tg"
-  port     = 80
-  protocol = "HTTP"
+resource "aws_lb_target_group" "https" {
+  name     = "${var.name_prefix}-tg-https"
+  port     = 443
+  protocol = "HTTPS"
   vpc_id   = var.vpc_id
+  target_type = "ip"
 
   health_check {
-    path                = "/"
-    protocol            = "HTTP"
+    enabled             = true
     interval            = 30
-    timeout             = 5
+    path                = "/"
+    protocol            = "HTTPS"
+    matcher             = "200-399"
     healthy_threshold   = 2
     unhealthy_threshold = 2
-    matcher             = "200"
+    timeout             = 5
   }
 
   tags = {
-    Name = "${var.name_prefix}-tg"
+    Name        = "${var.name_prefix}-tg-https"
+    Environment = var.name_prefix
   }
 }
 
@@ -64,7 +80,7 @@ resource "aws_lb_listener" "https" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.eks.arn
+    target_group_arn = aws_lb_target_group.https.arn
   }
 }
 

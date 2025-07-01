@@ -13,9 +13,9 @@ resource "aws_security_group" "rds" {
   vpc_id      = var.vpc_id
 
   ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
     security_groups = [var.eks_security_group_id]
   }
 
@@ -46,6 +46,8 @@ resource "aws_secretsmanager_secret_version" "db" {
     username = var.db_username,
     password = random_password.db.result
   })
+
+  depends_on = [aws_secretsmanager_secret.db]
 }
 
 resource "aws_db_instance" "primary" {
@@ -68,6 +70,11 @@ resource "aws_db_instance" "primary" {
   tags = {
     Name = "${var.name_prefix}-rds-primary"
   }
+
+  depends_on = [
+    aws_db_subnet_group.this,
+    aws_security_group.rds
+  ]
 }
 
 resource "aws_db_instance" "replica" {
@@ -79,9 +86,10 @@ resource "aws_db_instance" "replica" {
   vpc_security_group_ids = [aws_security_group.rds.id]
   replicate_source_db    = aws_db_instance.primary.identifier
   skip_final_snapshot    = true
-  depends_on             = [aws_db_instance.primary]
 
   tags = {
     Name = "${var.name_prefix}-rds-replica"
   }
+
+  depends_on = [aws_db_instance.primary]
 }

@@ -18,7 +18,6 @@ variable "private_subnet_ids" {
   type        = list(string)
 }
 
-
 variable "oidc_thumbprint" {
   description = "Thumbprint for OIDC provider (IRSA)"
   type        = string
@@ -37,4 +36,4 @@ variable "irsa_service_account" {
 variable "irsa_policy_arn" {
   description = "IAM Policy ARN to attach to the IRSA role"
   type        = string
-} 
+}

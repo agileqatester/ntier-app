@@ -69,13 +69,13 @@ resource "aws_lb_listener" "https" {
 }
 
 resource "aws_route53_record" "alb_dns" {
-  zone_id = var.zone_id
-  name    = var.subdomain_name  # e.g., \"api\" or \"app\"
+  zone_id = var.route53_zone_id
+  name    = var.subdomain_name
   type    = "A"
 
   alias {
-    name                   = var.alb_dns_name
-    zone_id                = var.alb_zone_id
+    name                   = aws_lb.this.dns_name
+    zone_id                = aws_lb.this.zone_id
     evaluate_target_health = true
   }
 }

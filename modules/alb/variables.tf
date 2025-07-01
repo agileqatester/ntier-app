@@ -18,17 +18,12 @@ variable "acm_certificate_arn" {
   type        = string
 }
 
-variable "zone_id" {
-  description = "Rout53 zone"
+variable "route53_zone_id" {
+  description = "ID of the Route 53 hosted zone"
   type        = string
 }
 
 variable "subdomain_name" {
-  description = "ARN of the ACM certificate for HTTPS"
-  type        = string
-}
-
-variable "acm_certificate_arn" {
-  description = "ARN of the ACM certificate for HTTPS"
+  description = "Subdomain name to assign to the ALB (e.g., app.example.com)"
   type        = string
 }

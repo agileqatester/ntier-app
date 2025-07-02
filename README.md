@@ -8,7 +8,8 @@ This project provisions a complete multi-tier application architecture on AWS us
 
 ## 🗺️ Architecture Diagram
 
-![AWS Architecture](aws.png)
+<img src="aws.png" alt="AWS Architecture Diagram" width="800"/>
+
 
 The architecture includes:
 

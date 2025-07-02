@@ -27,3 +27,9 @@ variable "firehose_role_arn" {
   description = "IAM role ARN for Firehose access"
   type        = string
 }
+
+variable "log_retention_days" {
+  description = "Number of days to retain logs in CloudWatch"
+  type        = number
+  default     = 7
+}

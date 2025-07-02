@@ -12,3 +12,9 @@ variable "sns_topic_arn" {
   description = "ARN of the SNS topic for alarm notifications"
   type        = string
 }
+
+variable "log_retention_days" {
+  description = "Number of days to retain logs in CloudWatch"
+  type        = number
+  default     = 7
+}

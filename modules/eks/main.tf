@@ -112,13 +112,14 @@ resource "aws_eks_node_group" "this" {
   subnet_ids      = var.private_subnet_ids
 
   scaling_config {
-    desired_size = 2
-    max_size     = 3
-    min_size     = 2
+    desired_size = var.desired_capacity
+    min_size     = var.min_capacity
+    max_size     = var.max_capacity
   }
 
-  instance_types = ["t4g.micro"]
-  ami_type       = "AL2_ARM_64" # Valid enum: AL2_x86_64, AL2_ARM_64, etc.
+  instance_types = var.instance_types
+  ami_type       = var.ami_type
+  capacity_type  = var.capacity_type
 
   tags = {
     Name        = "${var.name_prefix}-eks-nodes"

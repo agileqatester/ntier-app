@@ -47,3 +47,9 @@ variable "backup_retention_days" {
   type        = number
   default     = 7
 }
+
+variable "backup_window" {
+  description = "The daily time range (in UTC) during which automated backups are created"
+  type        = string
+  default     = "03:00-05:00"
+}

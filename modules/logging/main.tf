@@ -26,6 +26,34 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "logs" {
   }
 }
 
+## S3 bucket retention policy
+resource "aws_s3_bucket_lifecycle_configuration" "log_lifecycle" {
+  bucket = aws_s3_bucket.log_bucket.id
+
+  rule {
+    id     = "archive-then-delete"
+    status = "Enabled"
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 90
+      storage_class = "GLACIER"
+    }
+
+    expiration {
+      days = 365
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+
 resource "aws_kinesis_stream" "log_stream" {
   name             = "${var.name_prefix}-log-stream"
   shard_count      = 1
@@ -42,7 +70,7 @@ resource "aws_kinesis_stream" "log_stream" {
 
 resource "aws_cloudwatch_log_group" "firehose" {
   name              = "/aws/kinesisfirehose/${var.name_prefix}-firehose"
-  retention_in_days = 7
+  retention_in_days = var.log_retention_days
 
   tags = {
     Name = "${var.name_prefix}-firehose-logs"

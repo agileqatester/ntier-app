@@ -14,9 +14,9 @@ This project provisions a complete multi-tier application architecture on AWS us
 The architecture includes:
 
 - **Frontend**: S3 static site with CloudFront and Route53
+- **Authentication**: Cognito for user auth and ALB integration
 - **Backend**: EKS cluster with RESTful APIs
 - **Database**: RDS PostgreSQL with standby and read replica
-- **Authentication**: Cognito for user auth and ALB integration
 - **Security**: IAM roles, WAF, Secrets Manager
 - **Monitoring**: CloudWatch, Kinesis, OpenSearch
 - **Networking**: VPC with public/private subnets, NAT, IGW
@@ -64,7 +64,7 @@ The architecture includes:
 | `jumpbox`        | Bastion host with tooling                                               |
 | `secret_manager` | Securely stores RDS credentials                                         |
 | `frontend`       | S3 static site + CloudFront + Route53 + Cognito                         |
-| `logging`        | Kinesis → S3/OpenSearch + Firehose + CloudWatch logs                    |
+| `logging`        | Kinesis → Firehose → S3/OpenSearch + CloudWatch logs                    |
 | `cognito`        | User auth + ALB integration                                             |
 | `waf`            | Web ACL for ALB or CloudFront (e.g. rate limiting, SQLi rules)          |
 | `monitoring`     | CloudWatch metrics, alarms (CPU, memory, request count)                 |
@@ -79,6 +79,10 @@ Terraform parameters are defined in variables.tf files under each module. There 
 - **Features**: Static site delivery, HTTPS via ACM, DNS via Route53
 - **Authentication**: Integrated with Amazon Cognito
 
+### Authentication Service
+- **Service**: Amazon Cognito
+- **Features**: User pools, ALB authentication, token-based access
+
 ### RESTful API Backend
 - **Hosted on**: Amazon EKS
 - **Routing**: Managed by ALB with path-based routing
@@ -89,14 +93,13 @@ Terraform parameters are defined in variables.tf files under each module. There 
 - **Features**: Multi-AZ standby, read replica
 - **Access**: Credentials stored in AWS Secrets Manager
 
-### Authentication Service
-- **Service**: Amazon Cognito
-- **Features**: User pools, ALB authentication, token-based access
-
 ### Real-time Data Processing
 - **Services**: Amazon Kinesis Data Streams + Firehose
-- **Storage**: Logs and metrics sent to S3 and OpenSearch
+- **Storage**: Logs and metrics sent to S3 and OpenSearch (can be reviwed in Kabana)
+
+### Monitoring
 - **Monitoring**: CloudWatch dashboards and alarms
+- **EKS**: Promethus with Grafana
 
 ## 💡 Enhancement Ideas
 

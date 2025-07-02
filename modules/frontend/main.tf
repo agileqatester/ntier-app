@@ -36,8 +36,8 @@ resource "aws_cognito_user_pool_domain" "frontend" {
 
 resource "aws_s3_bucket" "frontend" {
   bucket         = var.s3_bucket_name
-  force_destroy  = true
-
+#  force_destroy  = true
+  versioning { enabled = true }
   tags = {
     Name = "${var.name_prefix}-frontend-bucket"
   }

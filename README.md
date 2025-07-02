@@ -69,6 +69,7 @@ The architecture includes:
 | `monitoring`     | CloudWatch metrics, alarms (CPU, memory, request count)                 |
 | `security`       | IAM policies, roles, group permissions, boundary enforcement            |
 
+Terraform parameters are defined in variables.tf files under each module. There is also example of terraform.tfvars in env/dev
 
 ## 📡 API Reference
 

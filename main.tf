@@ -14,6 +14,11 @@ module "eks" {
   aws_region = var.aws_region
 }
 
+module "jumpbox" {
+  source = "./modules/jumpbox"
+  aws_region = var.aws_region
+}
+
 module "alb" {
   source = "./modules/alb"
   aws_region = var.aws_region
@@ -21,11 +26,6 @@ module "alb" {
 
 module "rds" {
   source = "./modules/rds"
-  aws_region = var.aws_region
-}
-
-module "jumpbox" {
-  source = "./modules/jumpbox"
   aws_region = var.aws_region
 }
 

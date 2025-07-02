@@ -1,3 +1,4 @@
+## Cognito creation and authentication
 resource "aws_cognito_user_pool" "frontend" {
   name = "${var.name_prefix}-user-pool"
 
@@ -33,6 +34,54 @@ resource "aws_cognito_user_pool_domain" "frontend" {
   domain       = var.cognito_domain_prefix
   user_pool_id = aws_cognito_user_pool.frontend.id
 }
+
+resource "aws_cognito_user" "admin" {
+  user_pool_id        = aws_cognito_user_pool.frontend.id
+  username            = var.admin_email
+  attributes = {
+    email          = var.admin_email
+    email_verified = true
+  }
+
+  temporary_password     = var.admin_temp_password
+  message_action         = "SUPPRESS"
+  force_alias_creation   = false
+}
+
+resource "aws_cognito_group" "admin_group" {
+  name         = "admin"
+  user_pool_id = aws_cognito_user_pool.frontend.id
+  description  = "Admin access group"
+  precedence   = 1
+}
+
+resource "aws_cognito_user_group_attachment" "admin_attachment" {
+  user_pool_id = aws_cognito_user_pool.frontend.id
+  username     = aws_cognito_user.admin.username
+  group_name   = aws_cognito_group.admin_group.name
+}
+
+resource "aws_lb_listener" "https_with_cognito" {
+  load_balancer_arn = var.alb_arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.acm_certificate_arn
+
+  default_action {
+    type = "authenticate-cognito"
+
+    authenticate_cognito {
+      user_pool_arn            = aws_cognito_user_pool.frontend.arn
+      user_pool_client_id      = aws_cognito_user_pool_client.frontend.id
+      user_pool_domain         = aws_cognito_user_pool_domain.frontend.domain
+      on_unauthenticated_request = "authenticate"
+    }
+  }
+
+  depends_on = [aws_cognito_user_pool_client.frontend]
+}
+
 
 resource "aws_s3_bucket" "frontend" {
   bucket         = var.s3_bucket_name
@@ -142,49 +191,3 @@ resource "null_resource" "frontend_deploy" {
   depends_on = [aws_s3_bucket_policy.frontend]
 }
 
-resource "aws_cognito_user" "admin" {
-  user_pool_id        = aws_cognito_user_pool.frontend.id
-  username            = var.admin_email
-  attributes = {
-    email          = var.admin_email
-    email_verified = true
-  }
-
-  temporary_password     = var.admin_temp_password
-  message_action         = "SUPPRESS"
-  force_alias_creation   = false
-}
-
-resource "aws_cognito_group" "admin_group" {
-  name         = "admin"
-  user_pool_id = aws_cognito_user_pool.frontend.id
-  description  = "Admin access group"
-  precedence   = 1
-}
-
-resource "aws_cognito_user_group_attachment" "admin_attachment" {
-  user_pool_id = aws_cognito_user_pool.frontend.id
-  username     = aws_cognito_user.admin.username
-  group_name   = aws_cognito_group.admin_group.name
-}
-
-resource "aws_lb_listener" "https_with_cognito" {
-  load_balancer_arn = var.alb_arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = var.acm_certificate_arn
-
-  default_action {
-    type = "authenticate-cognito"
-
-    authenticate_cognito {
-      user_pool_arn            = aws_cognito_user_pool.frontend.arn
-      user_pool_client_id      = aws_cognito_user_pool_client.frontend.id
-      user_pool_domain         = aws_cognito_user_pool_domain.frontend.domain
-      on_unauthenticated_request = "authenticate"
-    }
-  }
-
-  depends_on = [aws_cognito_user_pool_client.frontend]
-}

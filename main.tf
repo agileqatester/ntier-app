@@ -44,10 +44,6 @@ module "logging" {
   aws_region = var.aws_region
 }
 
-module "cognito" {
-  source = "./modules/cognito"
-  aws_region = var.aws_region
-}
 
 module "waf" {
   source = "./modules/waf"

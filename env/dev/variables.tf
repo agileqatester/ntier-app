@@ -20,27 +20,25 @@ variable "max_capacity" {}
 
  ## Security
 variable "k8s_namespace" {}
-variable "k8s_serviceaccount" {}
-# # EKS IRSA Configuration Variables
-# variable "irsa_namespace" {
-#   description = "Kubernetes namespace for IRSA (IAM Roles for Service Accounts)"
-#   type        = string
-#   default     = "default"
-# }
+## secrets_manager
+variable "db_username" {
+  description = "RDS database username"
+  type        = string
+  default     = "postgres"
+}
 
-# variable "irsa_service_account" {
-#   description = "Kubernetes service account name for IRSA"
-#   type        = string
-#   default     = "irsa-service-account"
-# }
+## ALB
+variable "route53_zone_id" {
+  description = "The Route 53 hosted zone ID for the ALB DNS record"
+  type        = string
+}
 
-# variable "irsa_policy_arn" {
-#   description = "ARN of the IAM policy to attach to the IRSA role"
-#   type        = string
-# }
+variable "subdomain_name" {
+  description = "The subdomain name to create for the ALB (e.g. 'app' for app.example.com)"
+  type        = string
+}
 
-# variable "oidc_thumbprint" {
-#   description = "OIDC thumbprint for the EKS cluster identity provider"
-#   type        = string
-#   default     = "9e99a48a9960b14926bb7f3b02e22da2b0ab7280"  # EKS OIDC root CA thumbprint
-# }
+variable "acm_certificate_arn" {
+  description = "The ARN of the ACM certificate for HTTPS listeners"
+  type        = string
+}

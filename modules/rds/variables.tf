@@ -21,19 +21,19 @@ variable "eks_security_group_id" {
 variable "db_username" {
   description = "Master DB username"
   type        = string
-  default     = "admin"
+  default     = "postgres"
 }
 
 variable "engine_version" {
   description = "PostgreSQL engine version"
   type        = string
-  default     = "15.3"
+  default     = "15.13"
 }
 
 variable "instance_class" {
   description = "RDS instance class"
   type        = string
-  default     = "db.t3.medium"
+  default     = "db.t4g.medium"
 }
 
 variable "allocated_storage" {

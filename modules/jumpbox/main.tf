@@ -32,8 +32,66 @@ resource "aws_security_group" "jumpbox" {
   }
 }
 
+locals {
+  instance_architecture_map = {
+    t2 = "x86_64"
+    t3 = "x86_64"
+    t3a = "x86_64"
+    t4g = "arm64"
+    m6g = "arm64"
+    c6g = "arm64"
+    r6g = "arm64"
+  }
+
+  instance_family = regex("^([a-z0-9]+)", var.instance_type)[0]
+  architecture    = lookup(local.instance_architecture_map, local.instance_family, "x86_64") # default fallback
+}
+
+data "aws_ami" "amazon_linux_2023" {
+  most_recent = true
+  owners      = ["137112412989"]
+
+  filter {
+    name   = "name"
+    values = [
+      local.architecture == "x86_64" ? "al2023-ami-*-x86_64" : "al2023-ami-*-arm64"
+    ]
+  }
+
+  filter {
+    name   = "architecture"
+    values = [local.architecture]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "platform-details"
+    values = ["Linux/UNIX"]
+  }
+
+  filter {
+    name   = "image-type"
+    values = ["machine"]
+  }
+
+  filter {
+    name   = "block-device-mapping.volume-type"
+    values = [ "gp3"]
+  }
+}
+
+
 resource "aws_instance" "jumpbox" {
-  ami                         = var.ami_id
+  ami                         = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux_2023.id
   instance_type               = var.instance_type
   subnet_id                   = var.public_subnet_id
   key_name                    = aws_key_pair.jumpbox.key_name

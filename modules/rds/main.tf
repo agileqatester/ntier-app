@@ -63,7 +63,7 @@ resource "aws_db_instance" "primary" {
   multi_az                = true
   skip_final_snapshot     = true
   backup_retention_period = var.backup_retention_days
-  preferred_backup_window = var.backup_window
+  #preferred_backup_window = var.backup_window
   deletion_protection     = true
   publicly_accessible     = false
   storage_encrypted       = true
@@ -85,7 +85,7 @@ resource "aws_db_instance" "replica" {
   publicly_accessible    = false
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  replicate_source_db    = aws_db_instance.primary.identifier
+  replicate_source_db    = aws_db_instance.primary.arn
   skip_final_snapshot    = true
 
   tags = {

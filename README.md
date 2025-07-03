@@ -105,7 +105,7 @@ Terraform parameters are defined in variables.tf files under each module. There 
 
 - **CI/CD Integration**: Add Jenkins Job, GitHub Actions or CodePipeline for automated deployments
 - **Blue/Green Deployments**: Use ALB target groups for zero-downtime updates
-- **Cost Optimization**: Add auto-scaling policies and spot instance support
+- **Cost Optimization**: Add auto-scaling policies. Already have spots and Gravitron instances
 - **Secrets Rotation**: Automate RDS credential rotation with Lambda
 - **Multi-Region Support**: Extend architecture for high availability across regions
 - **Service Mesh**: Integrate AWS App Mesh for microservices observability

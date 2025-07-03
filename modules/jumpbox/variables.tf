@@ -26,13 +26,14 @@ variable "public_key_path" {
 }
 
 variable "ami_id" {
+  description = "Optional override for AMI ID. If not set, a suitable Amazon Linux 2023 AMI will be used based on instance_type."
   type        = string
-  description = "AMI ID for EC2 instance (Amazon Linux 2023)"
+  default     = ""
 }
 
 variable "instance_type" {
   type        = string
-  default     = "t3.micro"
+  default     = "t4g.micro" # Default is Graviton (arm64)
   description = "EC2 instance type"
 }
 

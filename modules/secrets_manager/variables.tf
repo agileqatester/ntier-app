@@ -4,12 +4,7 @@ variable "name_prefix" {
 }
 
 variable "db_username" {
-  description = "Username for the RDS instance"
   type        = string
-}
-
-variable "db_password" {
-  description = "Password for the RDS instance"
-  type        = string
-  sensitive   = true
+  description = "Username for the RDS DB"
+  default     = "dbuser"
 }

@@ -12,3 +12,7 @@ output "rds_credentials_secret_arn" {
   description = "ARN of the Secrets Manager secret containing RDS credentials"
   value       = aws_secretsmanager_secret.db.arn
 }
+
+output "rds_host" {
+  value = aws_db_instance.primary.address
+}

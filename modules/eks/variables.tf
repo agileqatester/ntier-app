@@ -48,7 +48,7 @@ variable "instance_types" {
 variable "ami_type" {
   description = "AMI type"
   type        = string
-  default     = "AL2_ARM_64"
+  default     = "BOTTLEROCKET_ARM_64"
 
   validation {
     condition     = contains(["AL2_ARM_64", "AL2_x86_64", "BOTTLEROCKET_ARM_64", "BOTTLEROCKET_x86_64"], var.ami_type)

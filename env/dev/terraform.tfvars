@@ -3,7 +3,6 @@ name_prefix      = "ntire-app"
 environment      = "aws"
 log_retention_days = 7
 account_id       = 1234
-my_ip            = "85.65.171.0/32"
 # Variables for module: vpc
 region               = "us-east-1"
 vpc_cidr             = "10.0.0.0/16"

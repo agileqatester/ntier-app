@@ -44,14 +44,25 @@ module "eks" {
    private_subnet_ids  = module.vpc.private_subnet_ids
 } 
 
+data "aws_eks_cluster" "this" {
+  name = module.eks.cluster_name
+}
+
+# data "aws_iam_openid_connect_provider" "this" {
+#   url = data.aws_eks_cluster.this.identity[0].oidc[0].issuer
+# }
+
 module "security" {
   source = "../../modules/security"
 
   name_prefix         = var.name_prefix
-  #oidc_provider_arn   = var.oidc_provider_arn
-  #oidc_provider_url   = var.oidc_provider_url
+
+  oidc_provider_arn    = module.eks.oidc_provider_arn
+  oidc_provider_url    = module.eks.oidc_provider_url
+
   k8s_namespace       = var.k8s_namespace
   #k8s_serviceaccount  = var.k8s_serviceaccount
+  depends_on = [module.eks]  # Ensures EKS + OIDC provider are created before IRSA roles
 }
 
 module "rds" {

@@ -1,6 +1,6 @@
 aws_region       = "us-east-1"
 name_prefix      = "ntire-app"
-environment      = "aws"
+environment      = "dev"
 log_retention_days = 7
 account_id       = 1234
 # Variables for module: vpc
@@ -12,8 +12,6 @@ private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
 azs                  = ["us-east-1a", "us-east-1b"]
 
 # Security
-  oidc_provider_arn = "arn:eks"
-  oidc_provider_url = "apple.com"
   k8s_namespace = "runtime"
   k8s_serviceaccount = "sa-runtime"
 # Variables for module: eks

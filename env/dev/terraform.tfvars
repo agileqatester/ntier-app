@@ -1,9 +1,22 @@
 aws_region       = "us-east-1"
 name_prefix      = "ntire-app"
+
 log_retention_days = 7
 account_id       = 1234
+my_ip            = "85.65.171.0/32"
 # Variables for module: vpc
-vpc_cidr         = "10.0.0.0/16"
+region               = "us-east-1"
+vpc_cidr             = "10.0.0.0/16"
+vpc_cidr_blocks      = ["10.0.0.0/16"]
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
+azs                  = ["us-east-1a", "us-east-1b"]
+
+# Security
+  oidc_provider_arn = "arn:eks"
+  oidc_provider_url = "apple.com"
+  k8s_namespace = "runtime"
+  k8s_serviceaccount = "sa-runtime"
 # Variables for module: eks
 cluster_name     = "ntier-eks-cluster"
 instance_types   = ["t4g.micro"]

@@ -4,13 +4,13 @@ module "vpc" {
   vpc_cidr   = var.vpc_cidr
 }
 
-module "security" {
-  source = "./modules/security"
+module "eks" {
+  source = "./modules/eks"
   aws_region = var.aws_region
 }
 
-module "eks" {
-  source = "./modules/eks"
+module "security" {
+  source = "./modules/security"
   aws_region = var.aws_region
 }
 

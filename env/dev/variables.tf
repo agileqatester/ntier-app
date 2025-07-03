@@ -9,13 +9,14 @@ variable "public_subnet_cidrs" {}
 variable "private_subnet_cidrs" {}
 variable "azs" {}
 ## EKS
-variable "vpc_id" {}
+#variable "vpc_id" {}
 variable "cluster_name" {}
 variable "instance_types" {}
 variable "ami_type" {}
 variable "capacity_type" {}
 variable "desired_capacity" {}
-
+variable "min_capacity" {}
+variable "max_capacity" {}
 
  ## Security
 variable "k8s_namespace" {}

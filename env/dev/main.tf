@@ -2,8 +2,6 @@
 #    source = "../../"
 # }
 
-# env/dev/main.tf
-
 terraform {
   required_providers {
     aws = {
@@ -38,23 +36,23 @@ module "vpc" {
    azs                  = var.azs
    }
 
-# module "eks" {
-#   source = "../../modules/eks"
-#    name_prefix         = var.name_prefix
-#    vpc_cidr            = var.vpc_cidr
-#    vpc_id              = var.vpc_id
-#    private_subnet_ids  = var.private_subnet_ids
-# } 
+module "eks" {
+  source = "../../modules/eks"
+   name_prefix         = var.name_prefix
+   vpc_cidr            = var.vpc_cidr
+   vpc_id              = module.vpc.vpc_id
+   private_subnet_ids  = module.vpc.private_subnet_ids
+} 
 
-# module "security" {
-#   source = "../../modules/security"
+module "security" {
+  source = "../../modules/security"
 
-#   name_prefix         = var.name_prefix
-#   oidc_provider_arn   = var.oidc_provider_arn
-#   oidc_provider_url   = var.oidc_provider_url
-#   k8s_namespace       = var.k8s_namespace
-#   k8s_serviceaccount  = var.k8s_serviceaccount
-# }
+  name_prefix         = var.name_prefix
+  oidc_provider_arn   = var.oidc_provider_arn
+  oidc_provider_url   = var.oidc_provider_url
+  k8s_namespace       = var.k8s_namespace
+  k8s_serviceaccount  = var.k8s_serviceaccount
+}
 
 # Uncomment the modules below as needed
 

@@ -1,12 +1,3 @@
-resource "aws_key_pair" "jumpbox" {
-  key_name   = "${var.name_prefix}-jumpbox-key"
-  public_key = file(var.public_key_path)
-
-  tags = {
-    Name = "${var.name_prefix}-jumpbox-key"
-  }
-}
-
 resource "aws_security_group" "jumpbox" {
   name        = "${var.name_prefix}-jumpbox-sg"
   description = "Allow SSH from my_ip and access to RDS"
@@ -89,6 +80,15 @@ data "aws_ami" "amazon_linux_2023" {
   }
 }
 
+resource "tls_private_key" "local" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "jumpbox" {
+  key_name   = "${var.name_prefix}-jumpbox-key"
+  public_key = file(var.public_key_path)
+}
 
 resource "aws_instance" "jumpbox" {
   ami                         = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux_2023.id

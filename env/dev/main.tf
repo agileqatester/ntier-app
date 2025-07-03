@@ -21,7 +21,7 @@ provider "aws" {
 locals {
   common_tags = {
     Environment = var.environment
-    Project     = var.project_name
+    Project     = var.name_prefix
     ManagedBy   = "Terraform"
   }
 }
@@ -30,7 +30,7 @@ locals {
 module "vpc" {
   source = "../../modules/vpc"
 
-  project_name = var.project_name
+  project_name = var.name_prefix
   environment  = var.environment
   vpc_cidr     = var.vpc_cidr
   
@@ -53,7 +53,7 @@ module "eks" {
 
   cluster_name = var.cluster_name
   environment  = var.environment
-  project_name = var.project_name
+  project_name = var.name_prefix
   
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnet_ids
@@ -74,7 +74,7 @@ module "eks" {
   ami_type       = var.ami_type
   disk_size      = var.disk_size
   
-  desired_size = var.desired_size
+  desired_size = var.desired_capacity
   max_size     = var.max_size
   min_size     = var.min_size
   
@@ -110,7 +110,7 @@ module "security" {
 
   cluster_name = var.cluster_name
   environment  = var.environment
-  project_name = var.project_name
+  project_name = var.name_prefix
   
   eks_oidc_issuer_url = module.eks.cluster_oidc_issuer_url
   
@@ -140,7 +140,7 @@ module "security" {
 #   
 #   alb_name     = var.alb_name
 #   environment  = var.environment
-#   project_name = var.project_name
+#   project_name = var.name_prefix
 #   
 #   vpc_id              = module.vpc.vpc_id
 #   subnet_ids          = module.vpc.public_subnet_ids
@@ -157,7 +157,7 @@ module "security" {
 #   
 #   db_name      = var.db_name
 #   environment  = var.environment
-#   project_name = var.project_name
+#   project_name = var.name_prefix
 #   
 #   vpc_id               = module.vpc.vpc_id
 #   subnet_ids           = module.vpc.private_subnet_ids

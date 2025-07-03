@@ -17,7 +17,7 @@ variable "ami_type" {}
 variable "capacity_type" {}
 variable "desired_capacity" {}
 variable "min_size" {}
-variable "min_size" {}
+variable "max_size" {}
 # ## Security
 variable "oidc_provider_arn" {}
 variable "oidc_provider_url" {}

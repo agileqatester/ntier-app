@@ -56,3 +56,8 @@ variable my_ip {
   description = "My IP address in CIDR format (e.g., 1.2.3.4/32)"
   type        = string
 }
+
+variable "jumpbox_security_group_id" {
+  description = "Security group ID of the jumpbox host"
+  type        = string
+}

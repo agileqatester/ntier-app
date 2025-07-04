@@ -16,3 +16,8 @@ output "rds_credentials_secret_arn" {
 output "rds_host" {
   value = aws_db_instance.primary.address
 }
+
+output "rds_endpoint" {
+  description = "The endpoint of the primary RDS instance"
+  value       = aws_db_instance.primary.endpoint
+}

@@ -97,3 +97,14 @@ resource "aws_instance" "jumpbox" {
 
   depends_on = [aws_security_group.jumpbox, aws_key_pair.jumpbox]
 }
+
+resource "aws_security_group_rule" "allow_jumpbox" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds.id
+  source_security_group_id = var.jumpbox_security_group_id
+  description              = "Allow Postgres access from jumpbox"
+}
+

@@ -24,6 +24,12 @@ variable "oidc_thumbprint" {
   default     = "9e99a48a9960b14926bb7f3b02e22da2b0ab7280"
 }
 
+variable "jumpbox_security_group_id" {
+  description = "Security Group ID of the jumpbox"
+  type        = string
+}
+
+
 # variable "irsa_namespace" {
 #   description = "Namespace for the Kubernetes service account using IRSA"
 #   type        = string

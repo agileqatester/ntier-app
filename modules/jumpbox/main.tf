@@ -24,18 +24,7 @@ resource "aws_security_group" "jumpbox" {
 }
 
 locals {
-  instance_architecture_map = {
-    t2 = "x86_64"
-    t3 = "x86_64"
-    t3a = "x86_64"
-    t4g = "arm64"
-    m6g = "arm64"
-    c6g = "arm64"
-    r6g = "arm64"
-  }
-
-  instance_family = regex("^([a-z0-9]+)", var.instance_type)[0]
-  architecture    = lookup(local.instance_architecture_map, local.instance_family, "x86_64") # default fallback
+  architecture = "arm64"
 }
 
 data "aws_ami" "amazon_linux_2023" {
@@ -44,14 +33,12 @@ data "aws_ami" "amazon_linux_2023" {
 
   filter {
     name   = "name"
-    values = [
-      local.architecture == "x86_64" ? "al2023-ami-*-x86_64" : "al2023-ami-*-arm64"
-    ]
+    values = ["al2023-ami-*-arm64"]
   }
 
   filter {
     name   = "architecture"
-    values = [local.architecture]
+    values = ["arm64"]
   }
 
   filter {
@@ -76,7 +63,7 @@ data "aws_ami" "amazon_linux_2023" {
 
   filter {
     name   = "block-device-mapping.volume-type"
-    values = [ "gp3"]
+    values = ["gp3"]
   }
 }
 

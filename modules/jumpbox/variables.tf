@@ -52,3 +52,7 @@ variable "db_name" {
   default     = "products"
   description = "Initial database name to create"
 }
+variable my_ip {
+  description = "My IP address in CIDR format (e.g., 1.2.3.4/32)"
+  type        = string
+}

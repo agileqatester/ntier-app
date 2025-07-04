@@ -23,6 +23,7 @@ min_capacity     = 1
 max_capacity     = 3
 # Variables for module: jumpbox
 public_key_path  = "~/.ssh/id_rsa.pub"
+
 # RDS
 db_username             = "postgres"
 backup_retention_days   = 7

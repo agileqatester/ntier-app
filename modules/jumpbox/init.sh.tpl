@@ -21,7 +21,7 @@ rm -rf awscliv2.zip aws
 # Install kubectl (for ARM64 — AL2023 on Graviton is aarch64)
 ARCH=arm64
 KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
-curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl"
+curl -LO "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$ARCH/kubectl"
 chmod +x kubectl
 sudo mv kubectl /usr/local/bin/
 

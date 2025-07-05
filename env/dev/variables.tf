@@ -21,11 +21,6 @@ variable "max_capacity" {}
  ## Security
 variable "k8s_namespace" {}
 ## secrets_manager
-variable "db_username" {
-  description = "RDS database username"
-  type        = string
-  default     = "postgres"
-}
 
 ## ALB
 variable "route53_zone_id" {
@@ -42,3 +37,28 @@ variable "acm_certificate_arn" {
   description = "The ARN of the ACM certificate for HTTPS listeners"
   type        = string
 }
+
+variable "db_username" {
+  description = "RDS database username"
+  type        = string
+  default     = "postgres"
+}
+
+# variable "jumpbox_security_group_id" {
+#   description = "Security Group ID of the jumpbox"
+#   type        = string
+# }
+variable my_ip {
+  description = "My IP address in CIDR format (e.g., 1.2.3.4/32)"
+  type        = string
+}
+
+variable "account_id" {}
+variable "admin_temp_password" {}
+variable "alb_arn" {}
+variable "sns_topic_arn" {
+  description = "SNS topic for CloudWatch alarms"
+  type        = string
+}
+variable "resource_arn" {}
+

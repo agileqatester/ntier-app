@@ -23,8 +23,8 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   }
 
   actions_enabled = true
-  alarm_actions   = [var.sns_topic_arn]
-  ok_actions      = [var.sns_topic_arn]
+  alarm_actions = ["arn:aws:sns:us-east-1:111122223333:my-topic"]
+  ok_actions    = ["arn:aws:sns:us-east-1:111122223333:my-topic"]
 
   tags = {
     Name = "${var.name_prefix}-cpu-alarm"

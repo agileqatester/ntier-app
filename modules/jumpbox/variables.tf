@@ -13,12 +13,6 @@ variable "public_subnet_id" {
   description = "Public subnet ID"
 }
 
-variable "my_ip" {
-  type        = string
-  description = "Your public IP with CIDR"
-  default     = "85.65.171.123/32" # Narrowed to a specific IP
-}
-
 variable "public_key_path" {
   type        = string
   description = "Path to SSH public key"
@@ -57,7 +51,21 @@ variable my_ip {
   type        = string
 }
 
-variable "jumpbox_security_group_id" {
-  description = "Security group ID of the jumpbox host"
+# variable "jumpbox_security_group_id" {
+#   description = "Security group ID of the jumpbox host"
+#   type        = string
+# }
+variable "aws_region" {
+  description = "AWS region to configure AWS CLI and SDKs"
+  type        = string
+}
+
+variable "cluster_name" {
+  description = "Name of the EKS cluster"
+  type        = string
+}
+
+variable "rds_security_group_id" {
+  description = "RDS SG to allow access from jumpbox"
   type        = string
 }

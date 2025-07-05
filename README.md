@@ -62,7 +62,7 @@ The architecture includes:
 | `eks`            | EKS Cluster + Node Groups + IRSA                                        |
 | `rds`            | PostgreSQL DB (Primary + Read Replica + Standby)                        |
 | `jumpbox`        | Bastion host with tooling                                               |
-| `secret_manager` | Securely stores RDS credentials                                         |
+| `secrets_manager` | Securely stores RDS credentials                                         |
 | `frontend`       | S3 static site + CloudFront + Route53 + Cognito                         |
 | `logging`        | Kinesis → Firehose → S3/OpenSearch + CloudWatch logs                    |
 | `cognito`        | User auth + ALB integration                                             |

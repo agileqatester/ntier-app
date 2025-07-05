@@ -88,7 +88,9 @@ resource "aws_instance" "jumpbox" {
   user_data = templatefile("${path.module}/init.sh.tpl", {
     rds_secret_arn = var.rds_secret_arn,
     rds_host       = var.rds_host,
-    db_name        = var.db_name
+    db_name        = var.db_name,
+    aws_region     = var.aws_region,
+    cluster_name   = var.cluster_name
   })
 
   tags = {
@@ -103,8 +105,8 @@ resource "aws_security_group_rule" "allow_jumpbox" {
   from_port                = 5432
   to_port                  = 5432
   protocol                 = "tcp"
-  security_group_id        = aws_security_group.rds.id
-  source_security_group_id = var.jumpbox_security_group_id
+  security_group_id        = var.rds_security_group_id
+  source_security_group_id = aws_security_group.jumpbox.id
   description              = "Allow Postgres access from jumpbox"
 }
 

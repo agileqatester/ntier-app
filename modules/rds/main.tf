@@ -94,3 +94,13 @@ resource "aws_db_instance" "replica" {
 
   depends_on = [aws_db_instance.primary]
 }
+
+resource "aws_security_group_rule" "jumpbox_to_rds" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds.id
+  source_security_group_id = var.jumpbox_security_group_id
+  description              = "Allow Postgres access from Jumpbox"
+}

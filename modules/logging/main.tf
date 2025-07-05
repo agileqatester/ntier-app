@@ -28,11 +28,15 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "logs" {
 
 ## S3 bucket retention policy
 resource "aws_s3_bucket_lifecycle_configuration" "log_lifecycle" {
-  bucket = aws_s3_bucket.log_bucket.id
+  bucket = aws_s3_bucket.logs.id
 
   rule {
     id     = "archive-then-delete"
     status = "Enabled"
+
+    filter {
+      prefix = ""  # Match all objects
+    }
 
     transition {
       days          = 30
@@ -47,6 +51,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "log_lifecycle" {
     expiration {
       days = 365
     }
+
     abort_incomplete_multipart_upload {
       days_after_initiation = 7
     }
@@ -56,7 +61,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "log_lifecycle" {
 
 resource "aws_kinesis_stream" "log_stream" {
   name             = "${var.name_prefix}-log-stream"
-  shard_count      = 1
   retention_period = 24
 
   stream_mode_details {

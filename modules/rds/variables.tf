@@ -53,3 +53,8 @@ variable "backup_window" {
   type        = string
   default     = "03:00-05:00"
 }
+
+variable "jumpbox_security_group_id" {
+  description = "Security group ID of the jumpbox for DB access"
+  type        = string
+}

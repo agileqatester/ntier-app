@@ -18,6 +18,22 @@ resource "aws_cognito_user_pool" "frontend" {
   }
 }
 
+resource "aws_iam_role" "admin_role" {
+  name = "${var.name_prefix}-cognito-admin-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = {
+        Service = "cognito-idp.amazonaws.com"
+      }
+    }]
+  })
+}
+
+
 resource "aws_cognito_user_pool_client" "frontend" {
   name                                = "${var.name_prefix}-app-client"
   user_pool_id                        = aws_cognito_user_pool.frontend.id
@@ -48,18 +64,20 @@ resource "aws_cognito_user" "admin" {
   force_alias_creation   = false
 }
 
-resource "aws_cognito_group" "admin_group" {
-  name         = "admin"
+resource "aws_cognito_user_group" "admin_group" {
   user_pool_id = aws_cognito_user_pool.frontend.id
-  description  = "Admin access group"
+  name         = "admin"
+  description  = "Admin Group"
   precedence   = 1
+  role_arn     = aws_iam_role.admin_role.arn
 }
 
-resource "aws_cognito_user_group_attachment" "admin_attachment" {
-  user_pool_id = aws_cognito_user_pool.frontend.id
-  username     = aws_cognito_user.admin.username
-  group_name   = aws_cognito_group.admin_group.name
-}
+
+# resource "aws_cognito_user_group_attachment" "admin_attachment" {
+#   user_pool_id = aws_cognito_user_pool.frontend.id
+#   username     = aws_cognito_user.admin.username
+#   group_name   = aws_cognito_group.admin_group.name
+# }
 
 resource "aws_lb_listener" "https_with_cognito" {
   load_balancer_arn = var.alb_arn
@@ -86,9 +104,16 @@ resource "aws_lb_listener" "https_with_cognito" {
 resource "aws_s3_bucket" "frontend" {
   bucket         = var.s3_bucket_name
 #  force_destroy  = true
-  versioning { enabled = true }
   tags = {
     Name = "${var.name_prefix}-frontend-bucket"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 

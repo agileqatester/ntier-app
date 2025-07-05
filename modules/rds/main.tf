@@ -104,3 +104,20 @@ resource "aws_security_group_rule" "jumpbox_to_rds" {
   source_security_group_id = var.jumpbox_security_group_id
   description              = "Allow Postgres access from Jumpbox"
 }
+
+resource "aws_cloudwatch_metric_alarm" "rds_high_cpu" {
+  alarm_name          = "${var.name_prefix}-rds-high-cpu"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 70
+  alarm_description   = "Alarm when RDS CPU exceeds 70%"
+  dimensions = {
+    DBInstanceIdentifier = var.rds_instance_id
+  }
+  alarm_actions = [var.sns_topic_arn]
+  ok_actions    = [var.sns_topic_arn]
+}

@@ -61,6 +61,6 @@ variable "sns_topic_arn" {
   type        = string
 }
 variable "resource_arn" {}
-# variable "account_id" {}
+variable "rds_instance_id" {}
 # variable "account_id" {}
 # variable "account_id" {}

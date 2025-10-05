@@ -81,6 +81,43 @@ variable "log_retention_days" {
   type    = number
   default = 7
 }
+
+# Module toggles
+variable "enable_rds" {
+  description = "Enable RDS module"
+  type        = bool
+  default     = true
+}
+
+variable "enable_logging" {
+  description = "Enable logging module"
+  type        = bool
+  default     = true
+}
+
+variable "enable_monitoring" {
+  description = "Enable monitoring module"
+  type        = bool
+  default     = true
+}
+
+variable "enable_waf" {
+  description = "Enable WAF module"
+  type        = bool
+  default     = true
+}
+
+variable "enable_frontend" {
+  description = "Enable frontend module"
+  type        = bool
+  default     = true
+}
+
+variable "enable_nat" {
+  description = "Enable NAT (gateway or instance)"
+  type        = bool
+  default     = true
+}
 variable "s3_bucket_name" {
   description = "Frontend S3 bucket name"
   type        = string

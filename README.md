@@ -110,6 +110,57 @@ Debugging tips
 
 ---
 
+## 🧪 Quick Testing Setup
+
+For a minimal testing environment (no RDS, logging, monitoring, WAF, or frontend):
+
+1. **Update test configuration:**
+   ```bash
+   # Edit env/dev/test.tfvars and set:
+   # - my_ip (get with: curl -s ifconfig.me)
+   # - public_key_path (e.g., /Users/you/.ssh/id_rsa.pub)
+   ```
+
+2. **Deploy test environment:**
+   ```bash
+   make test-plan    # Review what will be created
+   make test-apply   # Deploy (takes ~10-15 minutes)
+   ```
+
+3. **Get connection info:**
+   ```bash
+   ./scripts/show-info.sh
+   # Or manually:
+   terraform output
+   ```
+
+4. **Test the application:**
+   ```bash
+   # SSH to jumpbox
+   ssh -i ~/.ssh/id_rsa ec2-user@<jumpbox_ip>
+   
+   # From jumpbox, configure kubectl and test
+   aws eks update-kubeconfig --name ntier-eks-cluster --region us-east-1
+   kubectl get pods
+   kubectl get svc
+   
+   # Get test app URL and test it
+   SERVICE_URL=$(kubectl get svc ntire-app-test-svc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+   curl http://$SERVICE_URL
+   ```
+
+5. **Cleanup:**
+   ```bash
+   make test-destroy
+   ```
+
+**Test environment includes:** VPC, EKS, Jumpbox, ALB, Test App (Flask), Security Groups, NAT instance  
+**Estimated cost:** ~$0.15-0.20/hour (~$3.50-5/day)
+
+📖 See [QUICKSTART.md](QUICKSTART.md) for more details and [TESTING.md](TESTING.md) for comprehensive testing guide.
+
+---
+
 ### 🧱 Terraform Modules
 
 | Module           | Purpose                                                                 |
@@ -126,6 +177,7 @@ Debugging tips
 | `waf`            | Web ACL for ALB or CloudFront (e.g. rate limiting, SQLi rules)          |
 | `monitoring`     | CloudWatch metrics, alarms (CPU, memory, request count)                 |
 | `security`       | IAM policies, roles, group permissions, boundary enforcement            |
+| `test-app`       | Simple Flask test application for EKS validation                        |
 
 Terraform parameters are defined in variables.tf files under each module. There is also example of terraform.tfvars in env/dev
 

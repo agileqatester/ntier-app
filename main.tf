@@ -16,12 +16,12 @@ module "jumpbox" {
   name_prefix           = var.name_prefix
   vpc_id                = module.vpc.vpc_id
   public_subnet_id      = module.vpc.public_subnet_ids[0]
-  rds_secret_arn        = module.secrets_manager.rds_secret_arn
-  rds_host              = module.rds.rds_host
+  rds_secret_arn        = var.enable_rds ? module.secrets_manager[0].rds_secret_arn : ""
+  rds_host              = var.enable_rds ? module.rds[0].rds_host : ""
   my_ip                 = var.my_ip
   aws_region            = var.aws_region
   cluster_name          = module.eks.cluster_name
-  rds_security_group_id = module.rds.rds_security_group_id
+  rds_security_group_id = var.enable_rds ? module.rds[0].rds_security_group_id : ""
 }
 
 
@@ -49,6 +49,7 @@ module "security" {
 
 
 module "rds" {
+  count  = var.enable_rds ? 1 : 0
   source = "./modules/rds"
   name_prefix               = var.name_prefix
   #aws_region          = var.aws_region
@@ -61,6 +62,7 @@ module "rds" {
 }
 
 module "secrets_manager" {
+  count  = var.enable_rds ? 1 : 0
   source = "./modules/secrets_manager"
   name_prefix  = var.name_prefix
   db_username  = var.db_username
@@ -86,6 +88,7 @@ module "alb" {
 }
 
 module "frontend" {
+  count  = var.enable_frontend ? 1 : 0
   source = "./modules/frontend"
   name_prefix           = var.name_prefix  
   route53_zone_id       = var.route53_zone_id         # REQUIRED
@@ -103,6 +106,7 @@ module "frontend" {
 }
 
 module "logging" {
+  count  = var.enable_logging ? 1 : 0
   source = "./modules/logging"
   name_prefix         = var.name_prefix
   region              = var.aws_region
@@ -114,12 +118,14 @@ module "logging" {
 
 
 module "waf" {
+  count  = var.enable_waf ? 1 : 0
   source = "./modules/waf"
   name_prefix  = var.name_prefix
   resource_arn = "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-app/abc123"
 }
 
 module "monitoring" {
+  count  = var.enable_monitoring ? 1 : 0
   source = "./modules/monitoring"
   name_prefix   = var.name_prefix
   asg_name      = "dummy"

@@ -27,3 +27,17 @@ destroy:
 	@read -r "-p?Proceed with 'terraform destroy -var-file=$(VARFILE) -auto-approve'? [Y/n] " ans; \
 	if [ "$$ans" = "n" ] || [ "$$ans" = "N" ]; then echo "Aborted"; exit 1; fi; \
 	terraform destroy -var-file=$(VARFILE) -auto-approve
+
+test-plan:
+	@echo "Testing with minimal configuration..."
+	terraform plan -var-file=env/dev/test.tfvars
+
+test-apply:
+	@echo "Deploying test environment..."
+	@read -r "-p?This will deploy a minimal test environment. Continue? [Y/n] " ans; \
+	if [ "$$ans" = "n" ] || [ "$$ans" = "N" ]; then echo "Aborted"; exit 1; fi; \
+	terraform apply -var-file=env/dev/test.tfvars -auto-approve
+
+test-destroy:
+	@echo "Destroying test environment..."
+	terraform destroy -var-file=env/dev/test.tfvars -auto-approve

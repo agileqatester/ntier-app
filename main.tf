@@ -8,6 +8,7 @@ module "vpc" {
    private_subnet_cidrs = var.private_subnet_cidrs
    azs                  = var.azs
   nat_mode             = var.nat_mode
+  endpoint_security_group_id = module.security.endpoint_security_group_id
 }
 
 module "jumpbox" {
@@ -36,7 +37,8 @@ module "eks" {
 module "security" {
   source = "./modules/security"
   name_prefix          = var.name_prefix
-
+  vpc_id               = module.vpc.vpc_id
+  private_subnet_cidrs = module.vpc.private_subnet_ids == [] ? var.private_subnet_cidrs : module.vpc.private_subnet_ids
   oidc_provider_arn    = module.eks.oidc_provider_arn
   oidc_provider_url    = module.eks.oidc_provider_url
 

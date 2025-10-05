@@ -107,6 +107,23 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
+// Optional dedicated endpoint subnets (one per AZ). When provided, interface endpoints will be placed
+// into these subnets instead of the private app subnets.
+resource "aws_subnet" "endpoint" {
+  count             = length(var.endpoint_subnet_cidrs) > 0 ? length(var.endpoint_subnet_cidrs) : 0
+  vpc_id            = aws_vpc.this.id
+  cidr_block        = var.endpoint_subnet_cidrs[count.index]
+  availability_zone = var.azs[count.index]
+
+  tags = {
+    Name        = "${var.name_prefix}-endpoint-${count.index + 1}"
+    Environment = var.name_prefix
+  }
+}
+
+// Endpoint SG is now owned by the security module. Use the provided endpoint_security_group_id or fall back
+// to the original vpc_endpoints SG for backward compatibility.
+
 resource "aws_security_group" "vpc_endpoints" {
   name        = "${var.name_prefix}-vpc-endpoint-sg"
   description = "Allow HTTPS to VPC endpoints"
@@ -148,8 +165,8 @@ resource "aws_vpc_endpoint" "kinesis_firehose" {
   vpc_id              = aws_vpc.this.id
   service_name        = "com.amazonaws.${var.region}.kinesis-firehose"
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.private[*].id
-  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  subnet_ids          = length(var.endpoint_subnet_cidrs) > 0 ? aws_subnet.endpoint[*].id : aws_subnet.private[*].id
+  security_group_ids  = [var.endpoint_security_group_id != "" ? var.endpoint_security_group_id : aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
 
   tags = {
@@ -162,8 +179,8 @@ resource "aws_vpc_endpoint" "opensearch" {
   vpc_id              = aws_vpc.this.id
   service_name        = "com.amazonaws.${var.region}.es"
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.private[*].id
-  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  subnet_ids          = length(var.endpoint_subnet_cidrs) > 0 ? aws_subnet.endpoint[*].id : aws_subnet.private[*].id
+  security_group_ids  = [var.endpoint_security_group_id != "" ? var.endpoint_security_group_id : aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
 
   tags = {
@@ -176,8 +193,8 @@ resource "aws_vpc_endpoint" "secretsmanager" {
   vpc_id              = aws_vpc.this.id
   service_name        = "com.amazonaws.${var.region}.secretsmanager"
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.private[*].id
-  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  subnet_ids          = length(var.endpoint_subnet_cidrs) > 0 ? aws_subnet.endpoint[*].id : aws_subnet.private[*].id
+  security_group_ids  = [var.endpoint_security_group_id != "" ? var.endpoint_security_group_id : aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
 
   tags = {

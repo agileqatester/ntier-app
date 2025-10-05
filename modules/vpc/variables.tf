@@ -75,3 +75,19 @@ variable "nat_instance_ami" {
   type        = string
   default     = ""
 }
+
+variable "endpoint_subnet_cidrs" {
+  description = "Optional list of CIDRs for dedicated endpoint subnets (one per AZ). If empty, interface endpoints will be placed into the private subnets."
+  type        = list(string)
+  default     = []
+  validation {
+    condition     = length(var.endpoint_subnet_cidrs) == 0 || length(var.endpoint_subnet_cidrs) == length(var.azs)
+    error_message = "endpoint_subnet_cidrs must be empty or a list with the same length as azs"
+  }
+}
+
+variable "endpoint_security_group_id" {
+  description = "Optional security group id to attach to interface endpoints. If provided, used instead of the VPC module's internal endpoint SG."
+  type        = string
+  default     = ""
+}

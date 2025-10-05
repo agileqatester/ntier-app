@@ -32,3 +32,15 @@ variable "enable_irsa" {
   type        = bool
   default     = true
 }
+
+variable "vpc_id" {
+  description = "VPC id where security groups will be created"
+  type        = string
+  default     = ""
+}
+
+variable "private_subnet_cidrs" {
+  description = "Private subnet CIDRs for endpoint SG ingress defaults"
+  type        = list(string)
+  default     = []
+}

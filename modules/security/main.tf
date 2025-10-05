@@ -144,3 +144,28 @@ resource "aws_iam_role_policy_attachment" "irsa_policy_attachment" {
   role       = aws_iam_role.irsa_pod_access[0].name
   policy_arn = aws_iam_policy.irsa_policy[0].arn
 }
+
+// Security group for interface VPC endpoints. Exported so networking can attach it to endpoints.
+resource "aws_security_group" "endpoint" {
+  name        = "${var.name_prefix}-endpoint-sg"
+  description = "Security group used by VPC interface endpoints"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = var.private_subnet_cidrs
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.name_prefix}-endpoint-sg"
+  }
+}

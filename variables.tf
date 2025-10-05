@@ -148,5 +148,11 @@ variable "allow_jumpbox_to_rds" {
   type        = bool
   default     = false
 }
+
+variable "endpoint_subnet_cidrs" {
+  description = "Optional list of CIDRs for dedicated endpoint subnets (one per AZ). If empty, interface endpoints will be placed into the private subnets."
+  type        = list(string)
+  default     = []
+}
 # variable "account_id" {}
 # variable "account_id" {}

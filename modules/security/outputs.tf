@@ -1,3 +1,7 @@
+output "endpoint_security_group_id" {
+  description = "Security group id for interface VPC endpoints"
+  value       = aws_security_group.endpoint.id
+}
 output "eks_service_role_arn" {
   description = "IAM Role ARN for EKS service role"
   value       = aws_iam_role.eks_service.arn

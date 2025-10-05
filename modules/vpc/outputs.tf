@@ -27,3 +27,13 @@ output "vpc_endpoint_ids" {
     secretsmanager = aws_vpc_endpoint.secretsmanager.id
   }
 }
+
+output "endpoint_security_group_id" {
+  description = "Security group used for interface VPC endpoints (if created)"
+  value       = var.endpoint_security_group_id != "" ? var.endpoint_security_group_id : aws_security_group.vpc_endpoints.id
+}
+
+output "endpoint_subnet_ids" {
+  description = "IDs of endpoint subnets (when provided)"
+  value       = length(var.endpoint_subnet_cidrs) > 0 ? aws_subnet.endpoint[*].id : []
+}

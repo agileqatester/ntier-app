@@ -1,7 +1,7 @@
 locals {
   rendered_app_py = file("${path.module}/app.py")
-  rendered_deployment = templatefile("${path.module}/deployment.yaml.tpl", { name_prefix = var.name_prefix })
-  rendered_configmap = templatefile("${path.module}/configmap.yaml.tpl", { name_prefix = var.name_prefix, app_py = indent(local.rendered_app_py, 4) })
+  rendered_deployment = templatefile("${path.module}/deployment.yaml", { name_prefix = var.name_prefix })
+  rendered_configmap = templatefile("${path.module}/configmap.yaml", { name_prefix = var.name_prefix, app_py = indent(4, local.rendered_app_py) })
   manifests = join("\n---\n", [local.rendered_configmap, local.rendered_deployment])
 }
 
@@ -21,7 +21,7 @@ kubectl apply -f ${local_file.manifests[0].filename}
 EOT
   }
   triggers = {
-    manifest_sha = var.enabled ? filemd5(local_file.manifests[0].filename) : ""
+    manifest_sha = var.enabled ? md5(local.manifests) : ""
   }
 }
 

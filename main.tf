@@ -125,3 +125,11 @@ module "monitoring" {
   asg_name      = "dummy"
   sns_topic_arn = "dummy"
 }
+
+module "test_app" {
+  source      = "./modules/test-app"
+  name_prefix = var.name_prefix
+  cluster_name = module.eks.cluster_name
+  region = var.aws_region
+  enabled = var.environment == "dev"
+}

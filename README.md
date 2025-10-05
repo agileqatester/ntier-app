@@ -79,6 +79,10 @@ Notes about environments and NAT behavior
    nat_mode = "gateway"   # or "instance"
    ```
 
+Optional endpoint subnets (short)
+- Provide `endpoint_subnet_cidrs` (one CIDR per AZ) in your env tfvars to create dedicated endpoint subnets.
+- The endpoint Security Group is owned by `modules/security` and is exported as `module.security.endpoint_security_group_id`; `module.vpc` will use it automatically.
+
 AWS credentials and common troubleshooting
 -----------------------------------------
 

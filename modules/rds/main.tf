@@ -96,7 +96,7 @@ resource "aws_db_instance" "replica" {
 }
 
 resource "aws_security_group_rule" "jumpbox_to_rds" {
-  count                    = var.jumpbox_security_group_id != "" ? 1 : 0
+  count                    = var.create_jumpbox_rule ? 1 : 0
   type                     = "ingress"
   from_port                = 5432
   to_port                  = 5432
@@ -117,7 +117,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_high_cpu" {
   threshold           = 70
   alarm_description   = "Alarm when RDS CPU exceeds 70%"
   dimensions = {
-    DBInstanceIdentifier = var.rds_instance_id
+    DBInstanceIdentifier = var.rds_instance_id != "" ? var.rds_instance_id : aws_db_instance.primary.id
   }
   alarm_actions = [var.sns_topic_arn]
   ok_actions    = [var.sns_topic_arn]

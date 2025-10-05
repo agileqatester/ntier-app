@@ -48,6 +48,12 @@ variable my_ip {
   type        = string
 }
 
+variable "public_key_path" {
+  description = "Path to the SSH public key file for jumpbox (absolute path). Can be empty to skip importing."
+  type        = string
+  default     = ""
+}
+
 # variable "jumpbox_security_group_id" {
 #   description = "Security Group ID of the jumpbox"
 #   type        = string
@@ -61,6 +67,86 @@ variable "sns_topic_arn" {
   type        = string
 }
 variable "resource_arn" {}
-variable "rds_instance_id" {}
+variable "rds_instance_id" {
+  type    = string
+  default = ""
+}
+variable "nat_mode" {
+  description = "NAT mode to use for VPC module (gateway|instance)"
+  type        = string
+  default     = "gateway"
+}
+
+variable "log_retention_days" {
+  type    = number
+  default = 7
+}
+variable "s3_bucket_name" {
+  description = "Frontend S3 bucket name"
+  type        = string
+  default     = ""
+}
+
+variable "backup_window" {
+  description = "Backup window for RDS"
+  type        = string
+  default     = "03:00-05:00"
+}
+
+variable "backup_retention_days" {
+  description = "RDS backup retention days"
+  type        = number
+  default     = 7
+}
+
+variable "max_allocated_storage" {
+  type    = number
+  default = 100
+}
+
+variable "instance_class" {
+  type    = string
+  default = "db.t4g.medium"
+}
+
+variable "engine_version" {
+  type    = string
+  default = "15.13"
+}
+
+variable "allocated_storage" {
+  type    = number
+  default = 20
+}
+
+variable "frontend_build_dir" {
+  type    = string
+  default = ""
+}
+
+variable "cognito_domain_prefix" {
+  type    = string
+  default = ""
+}
+
+variable "cognito_callback_url" {
+  type    = string
+  default = ""
+}
+
+variable "cognito_logout_url" {
+  type    = string
+  default = ""
+}
+
+variable "admin_email" {
+  type    = string
+  default = ""
+}
+variable "allow_jumpbox_to_rds" {
+  description = "When true, RDS module will create a security-group-rule allowing the jumpbox SG to access RDS. Keep false when you don't want the rule created automatically."
+  type        = bool
+  default     = false
+}
 # variable "account_id" {}
 # variable "account_id" {}

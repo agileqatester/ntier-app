@@ -1,0 +1,81 @@
+#!/usr/bin/env zsh
+# Wrapper to run terraform plan/apply/destroy with a prompt and a default var-file (env/dev/terraform.tfvars)
+set -euo pipefail
+
+if [ $# -lt 1 ]; then
+  echo "usage: $0 <plan|apply|destroy> [var-file] [--auto-approve] [extra terraform args...]"
+  exit 1
+fi
+
+cmd=$1
+shift
+
+if [[ ! ${cmd} =~ ^(plan|apply|destroy)$ ]]; then
+  echo "Unsupported command: ${cmd}. Use plan, apply or destroy."
+  exit 1
+fi
+
+DEFAULT_VARFILE="env/dev/terraform.tfvars"
+VARFILE="$DEFAULT_VARFILE"
+AUTO_APPROVE=false
+
+# positional parsing: if first arg doesn't start with '-' treat as varfile
+if [ $# -gt 0 ]; then
+  case "$1" in
+    --auto-approve)
+      AUTO_APPROVE=true
+      shift
+      ;;
+    --var-file)
+      if [ -n "${2-}" ]; then
+        VARFILE="$2"
+        shift 2
+      fi
+      ;;
+    -var-file=*)
+      VARFILE="${1#-var-file=}"
+      shift
+      ;;
+    -* )
+      # leave as extra args
+      ;;
+    * )
+      VARFILE="$1"
+      shift
+      ;;
+  esac
+fi
+
+EXTRA_ARGS=("$@")
+
+# interactive prompt
+echo
+echo "You are about to run: terraform ${cmd}"
+echo "Default var-file: ${DEFAULT_VARFILE}"
+if [ "${VARFILE}" != "${DEFAULT_VARFILE}" ]; then
+  echo "Using var-file: ${VARFILE}"
+fi
+
+read -r "-p?Continue and execute terraform ${cmd} with var-file '${VARFILE}'? [Y/n] " REPLY
+REPLY=${REPLY:-Y}
+if [[ "${REPLY}" =~ ^[Nn]$ ]]; then
+  echo "Aborted by user."
+  exit 0
+fi
+
+# compose terraform command
+TF_CMD=(terraform ${cmd} -var-file="${VARFILE}")
+if [[ "${cmd}" == "apply" || "${cmd}" == "destroy" ]]; then
+  if [ "$AUTO_APPROVE" = true ]; then
+    TF_CMD+=("-auto-approve")
+  fi
+fi
+
+# append extra args
+if [ ${#EXTRA_ARGS[@]} -gt 0 ]; then
+  TF_CMD+=("${EXTRA_ARGS[@]}")
+fi
+
+echo
+echo "Running: ${TF_CMD[*]}"
+exec "${TF_CMD[@]}"

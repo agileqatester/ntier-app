@@ -60,9 +60,19 @@ variable "jumpbox_security_group_id" {
   default     = ""
 }
 
+variable "create_jumpbox_rule" {
+  description = "When true, create a security group rule to allow the jumpbox SG to talk to RDS. This avoids depending on across-module computed values at plan time."
+  type        = bool
+  default     = false
+}
+
 variable "sns_topic_arn" {
   description = "SNS topic for CloudWatch alarms"
   type        = string
 }
 
-variable "rds_instance_id" {}
+variable "rds_instance_id" {
+  description = "Optional RDS instance identifier to use for alarms; if empty, the created primary instance identifier will be used"
+  type        = string
+  default     = ""
+}

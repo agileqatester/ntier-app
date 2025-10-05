@@ -23,15 +23,7 @@ variable "private_subnet_cidrs" {
   type        = list(string)
 }
 
-variable "azs" {
-  description = "List of availability zones"
-  type        = list(string)
 
-  validation {
-    condition     = length(var.azs) > 0
-    error_message = "At least one AZ must be provided"
-  }
-}
 
 variable "enable_ipv6" {
   description = "Whether to enable IPv6 for the VPC (module does not support IPv6); keep false to avoid accidental IPv6 creation"
@@ -39,20 +31,22 @@ variable "enable_ipv6" {
   default     = false
 }
 
-// Basic cross-parameter validations
-variable "_validations" {
-  description = "Internal validation to ensure lists align"
+// Ensure lists align: public & private subnet lists must match azs length and be non-empty
+variable "_list_alignment_validation" {
+  description = "internal placeholder to document list alignment; not used directly"
   type        = any
+  default     = null
+}
+
+// Cross-variable validation: enforced on azs because validations must reference the variable being validated
+variable "azs" {
+  description = "List of availability zones"
+  type        = list(string)
 
   validation {
-    condition = (
-      length(var.public_subnet_cidrs) == length(var.azs) &&
-      length(var.private_subnet_cidrs) == length(var.azs) &&
-      length(var.public_subnet_cidrs) > 0
-    )
+    condition     = length(var.azs) > 0 && length(var.public_subnet_cidrs) == length(var.azs) && length(var.private_subnet_cidrs) == length(var.azs)
     error_message = "public_subnet_cidrs, private_subnet_cidrs and azs must be non-empty lists of equal length"
   }
-  default = null
 }
 
 variable "region" {
@@ -74,4 +68,10 @@ variable "nat_mode" {
     condition     = contains(["gateway", "instance"], var.nat_mode)
     error_message = "nat_mode must be either \"gateway\" or \"instance\""
   }
+}
+
+variable "nat_instance_ami" {
+  description = "Optional AMI ID to use for NAT instance. If empty, a default Amazon Linux 2023 x86_64 AMI will be used."
+  type        = string
+  default     = ""
 }

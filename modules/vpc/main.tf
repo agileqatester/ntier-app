@@ -54,8 +54,6 @@ resource "aws_nat_gateway" "this" {
   allocation_id = var.nat_mode == "gateway" ? aws_eip.nat[count.index].id : null
   subnet_id     = var.nat_mode == "gateway" ? aws_subnet.public[count.index].id : null
 
-  depends_on = var.nat_mode == "gateway" ? [aws_eip.nat] : []
-
   tags = var.nat_mode == "gateway" ? {
     Name        = "${var.name_prefix}-nat-${count.index + 1}"
     Environment = var.name_prefix
@@ -65,7 +63,7 @@ resource "aws_nat_gateway" "this" {
 // NAT instance (lower-cost option for dev/non-prod). Created only when nat_mode == "instance".
 resource "aws_eip" "nat_instance" {
   count = var.nat_mode == "instance" ? 1 : 0
-  vpc   = true
+  domain = "vpc"
 }
 
 resource "aws_security_group" "nat_instance" {
@@ -97,7 +95,7 @@ resource "aws_security_group" "nat_instance" {
 
 resource "aws_instance" "nat_instance" {
   count         = var.nat_mode == "instance" ? 1 : 0
-  ami           = data.aws_ami.amazon_linux_2023.id
+  ami           = var.nat_instance_ami != "" ? var.nat_instance_ami : data.aws_ami.nat_instance.id
   instance_type = "t3a.nano"
   subnet_id     = aws_subnet.public[0].id
   associate_public_ip_address = true
@@ -109,6 +107,47 @@ resource "aws_instance" "nat_instance" {
     Name = "${var.name_prefix}-nat-instance"
   }
 }
+
+data "aws_ami" "nat_instance" {
+  most_recent = true
+  owners      = ["137112412989"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "platform-details"
+    values = ["Linux/UNIX"]
+  }
+
+  filter {
+    name   = "image-type"
+    values = ["machine"]
+  }
+
+  filter {
+    name   = "block-device-mapping.volume-type"
+    values = ["gp3"]
+  }
+}
+
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
@@ -153,7 +192,9 @@ resource "aws_route" "private_nat_instance" {
   count                  = var.nat_mode == "instance" ? length(var.azs) : 0
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  instance_id            = var.nat_mode == "instance" ? aws_instance.nat_instance[0].id : null
+  # For NAT instances, route traffic via the instance's primary network interface.
+  # Use the primary_network_interface_id to avoid provider computed/managed instance_id conflicts.
+  network_interface_id   = aws_instance.nat_instance[0].primary_network_interface_id
 }
 
 resource "aws_route_table_association" "private" {

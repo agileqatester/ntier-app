@@ -68,15 +68,17 @@ data "aws_ami" "amazon_linux_2023" {
 }
 
 resource "aws_key_pair" "jumpbox" {
+  count      = var.public_key_path != "" ? 1 : 0
   key_name   = "${var.name_prefix}-jumpbox-key"
-  public_key = file(var.public_key_path)
+  public_key = var.public_key_path != "" ? file(var.public_key_path) : null
 }
 
 resource "aws_instance" "jumpbox" {
   ami                         = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux_2023.id
   instance_type               = var.instance_type
   subnet_id                   = var.public_subnet_id
-  key_name                    = aws_key_pair.jumpbox.key_name
+  # Attach key only when a public key path was provided and the key_pair resource was created.
+  key_name = var.public_key_path != "" ? aws_key_pair.jumpbox[0].key_name : null
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.jumpbox.id]
   iam_instance_profile        = aws_iam_instance_profile.jumpbox.name
@@ -93,7 +95,7 @@ resource "aws_instance" "jumpbox" {
     Name = "${var.name_prefix}-jumpbox"
   }
 
-  depends_on = [aws_security_group.jumpbox, aws_key_pair.jumpbox]
+  depends_on = [aws_security_group.jumpbox]
 }
 
 // IAM role and instance profile for jumpbox to allow: EKS DescribeCluster (for update-kubeconfig) and

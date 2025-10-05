@@ -7,6 +7,7 @@ module "vpc" {
    public_subnet_cidrs  = var.public_subnet_cidrs
    private_subnet_cidrs = var.private_subnet_cidrs
    azs                  = var.azs
+  nat_mode             = var.nat_mode
 }
 
 module "jumpbox" {
@@ -54,7 +55,7 @@ module "rds" {
   eks_security_group_id     = module.eks.eks_cluster_security_group_id
   jumpbox_security_group_id = module.jumpbox.jumpbox_security_group_id
   sns_topic_arn             = var.sns_topic_arn
-  rds_instance_id           = module.rds.rds_instance_id
+  create_jumpbox_rule       = var.allow_jumpbox_to_rds
 }
 
 module "secrets_manager" {

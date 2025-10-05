@@ -33,6 +33,28 @@ variable "azs" {
   }
 }
 
+variable "enable_ipv6" {
+  description = "Whether to enable IPv6 for the VPC (module does not support IPv6); keep false to avoid accidental IPv6 creation"
+  type        = bool
+  default     = false
+}
+
+// Basic cross-parameter validations
+variable "_validations" {
+  description = "Internal validation to ensure lists align"
+  type        = any
+
+  validation {
+    condition = (
+      length(var.public_subnet_cidrs) == length(var.azs) &&
+      length(var.private_subnet_cidrs) == length(var.azs) &&
+      length(var.public_subnet_cidrs) > 0
+    )
+    error_message = "public_subnet_cidrs, private_subnet_cidrs and azs must be non-empty lists of equal length"
+  }
+  default = null
+}
+
 variable "region" {
   description = "AWS Region"
   type        = string
@@ -41,4 +63,15 @@ variable "region" {
 variable "vpc_cidr_blocks" {
   description = "List of CIDRs allowed for SG ingress"
   type        = list(string)
+}
+
+variable "nat_mode" {
+  description = "NAT mode to use for private subnets: \"gateway\" (AWS NAT Gateway) or \"instance\" (NAT EC2 instance)."
+  type        = string
+  default     = "gateway"
+
+  validation {
+    condition     = contains(["gateway", "instance"], var.nat_mode)
+    error_message = "nat_mode must be either \"gateway\" or \"instance\""
+  }
 }

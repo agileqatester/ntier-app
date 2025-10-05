@@ -96,6 +96,7 @@ resource "aws_db_instance" "replica" {
 }
 
 resource "aws_security_group_rule" "jumpbox_to_rds" {
+  count                    = var.jumpbox_security_group_id != "" ? 1 : 0
   type                     = "ingress"
   from_port                = 5432
   to_port                  = 5432

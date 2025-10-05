@@ -44,21 +44,69 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_eip" "nat" {
-  count = length(var.azs)
+  count = var.nat_mode == "gateway" ? length(var.azs) : 0
 
   depends_on = [aws_internet_gateway.this]
 }
 
 resource "aws_nat_gateway" "this" {
-  count         = length(var.azs)
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
+  count         = var.nat_mode == "gateway" ? length(var.azs) : 0
+  allocation_id = var.nat_mode == "gateway" ? aws_eip.nat[count.index].id : null
+  subnet_id     = var.nat_mode == "gateway" ? aws_subnet.public[count.index].id : null
 
-  depends_on = [aws_eip.nat]
+  depends_on = var.nat_mode == "gateway" ? [aws_eip.nat] : []
 
-  tags = {
+  tags = var.nat_mode == "gateway" ? {
     Name        = "${var.name_prefix}-nat-${count.index + 1}"
     Environment = var.name_prefix
+  } : {}
+}
+
+// NAT instance (lower-cost option for dev/non-prod). Created only when nat_mode == "instance".
+resource "aws_eip" "nat_instance" {
+  count = var.nat_mode == "instance" ? 1 : 0
+  vpc   = true
+}
+
+resource "aws_security_group" "nat_instance" {
+  count = var.nat_mode == "instance" ? 1 : 0
+
+  name        = "${var.name_prefix}-nat-instance-sg"
+  description = "Security group for NAT instance"
+  vpc_id      = aws_vpc.this.id
+
+  # Allow traffic only from the private subnets to the NAT instance
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = var.private_subnet_cidrs
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.name_prefix}-nat-instance-sg"
+  }
+}
+
+resource "aws_instance" "nat_instance" {
+  count         = var.nat_mode == "instance" ? 1 : 0
+  ami           = data.aws_ami.amazon_linux_2023.id
+  instance_type = "t3a.nano"
+  subnet_id     = aws_subnet.public[0].id
+  associate_public_ip_address = true
+  vpc_security_group_ids = var.nat_mode == "instance" ? [aws_security_group.nat_instance[0].id] : []
+  # NAT instances must have source/destination checks disabled
+  source_dest_check = false
+
+  tags = {
+    Name = "${var.name_prefix}-nat-instance"
   }
 }
 
@@ -93,11 +141,19 @@ resource "aws_route_table" "private" {
   }
 }
 
-resource "aws_route" "private_nat" {
-  count                  = length(var.azs)
+// Routes for private subnets: point to NAT gateway (per AZ) or to single NAT instance depending on nat_mode
+resource "aws_route" "private_nat_gateway" {
+  count                  = var.nat_mode == "gateway" ? length(var.azs) : 0
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.this[count.index].id
+}
+
+resource "aws_route" "private_nat_instance" {
+  count                  = var.nat_mode == "instance" ? length(var.azs) : 0
+  route_table_id         = aws_route_table.private[count.index].id
+  destination_cidr_block = "0.0.0.0/0"
+  instance_id            = var.nat_mode == "instance" ? aws_instance.nat_instance[0].id : null
 }
 
 resource "aws_route_table_association" "private" {

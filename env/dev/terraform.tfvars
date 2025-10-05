@@ -23,7 +23,8 @@ desired_capacity = 2
 min_capacity     = 1
 max_capacity     = 3
 # Variables for module: jumpbox
-public_key_path         = "~/.ssh/id_rsa.pub"
+public_key_path         = "/Users/you/.ssh/id_rsa.pub" # use an absolute path
+nat_mode                = "instance"
 
 # RDS
 db_username             = "postgres"

@@ -1,0 +1,26 @@
+variable "name_prefix" {}
+variable "route53_zone_id" {}
+variable "subdomain_name" {}
+variable "acm_certificate_arn" {}
+variable "alb_arn" {}
+variable "my_ip" {}
+
+variable "account_id" {}
+variable "vpc_cidr" {}
+variable "cluster_name" {}
+variable "instance_types" {}
+variable "capacity_type" {}
+variable "sns_topic_arn" {}
+variable "resource_arn" {}
+variable "vpc_cidr_blocks" {}
+variable "aws_region" {}
+variable "max_capacity" {}
+variable "min_capacity" {}
+variable "desired_capacity" {}
+variable "azs" {}
+variable "k8s_namespace" {}
+variable "region" {}
+variable "public_subnet_cidrs" {}
+variable "private_subnet_cidrs" {}
+variable "ami_type" {}
+variable "environment" {}

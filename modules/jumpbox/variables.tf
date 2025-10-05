@@ -15,8 +15,8 @@ variable "public_subnet_id" {
 
 variable "public_key_path" {
   type        = string
-  description = "Path to SSH public key"
-  default     = "~/.ssh/id_rsa.pub"
+  description = "Absolute path to SSH public key (e.g. /Users/me/.ssh/id_rsa.pub). '~' is not expanded by Terraform; provide a full path."
+  default     = ""
 }
 
 variable "ami_id" {
@@ -49,6 +49,18 @@ variable "db_name" {
 variable my_ip {
   description = "My IP address in CIDR format (e.g., 1.2.3.4/32)"
   type        = string
+}
+
+// internal validation variable to assert formats
+variable "_validations" {
+  type        = any
+  description = "Internal validations for jumpbox variables"
+
+  validation {
+    condition = var.public_key_path != "" && can(cidrnetmask(var.my_ip))
+    error_message = "public_key_path must be provided (absolute path) and my_ip must be a valid CIDR (e.g. 1.2.3.4/32)"
+  }
+  default = null
 }
 
 # variable "jumpbox_security_group_id" {

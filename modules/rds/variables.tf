@@ -55,8 +55,9 @@ variable "backup_window" {
 }
 
 variable "jumpbox_security_group_id" {
-  description = "Security group ID of the jumpbox for DB access"
+  description = "Security group ID of the jumpbox for DB access (optional). If provided, RDS module will create an ingress rule allowing Postgres from this SG."
   type        = string
+  default     = ""
 }
 
 variable "sns_topic_arn" {

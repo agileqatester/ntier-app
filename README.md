@@ -36,20 +36,73 @@ The architecture includes:
  - kubectl (for EKS access)
    
 3. **Initialize Terraform**
-   ```
-    cd env/dev
-    terraform init
-    ```
-4. **Plan and apply**
-   ```
-    terraform plan
-    terraform apply
+   You can run Terraform directly from an env folder or use the provided Makefile which defaults to `env/dev/terraform.tfvars`.
 
-    ```
+   - Initialize from the dev environment:
+     ```bash
+     cd env/dev
+     terraform init
+     ```
+
+   - Or from the repo root using the Makefile (recommended for convenience):
+     ```bash
+     make init   # runs terraform init under the selected env (defaults to env/dev)
+     ```
+4. **Plan and apply**
+   Using the Makefile (defaults to env/dev/terraform.tfvars):
+   ```bash
+   make plan    # prompts and runs: terraform plan -var-file=${VARFILE}
+   make apply   # prompts and runs: terraform apply -var-file=${VARFILE}
+   make destroy # prompts and runs: terraform destroy -var-file=${VARFILE}
+   ```
+
+   Or run Terraform directly from an env folder:
+   ```bash
+   cd env/dev
+   terraform plan -var-file=terraform.tfvars
+   terraform apply -var-file=terraform.tfvars
+   ```
 5. **Access resources**   
  - EKS: ```aws eks update-kubeconfig --name <cluster-name> ```. ```<cluster-name> ``` need to be defined in terraform.tfvars
  - Frontend: CloudFront URL from outputs
  - RDS: Connect using credentials from Secrets Manager
+
+Notes about environments and NAT behavior
+----------------------------------------
+
+- This repository contains example environment variable files under `env/`.
+   - `env/dev/terraform.tfvars` is configured for development and, by default, uses a single NAT *instance* (cheaper, suitable for non-production).
+   - `env/prod/terraform.tfvars` is configured for production and uses NAT *gateways* (high-availability, higher cost).
+
+- The VPC behavior is controlled by the `nat_mode` variable which accepts `gateway` or `instance`. If you want to change the behavior for an environment, edit the environment tfvars and set:
+   ```hcl
+   nat_mode = "gateway"   # or "instance"
+   ```
+
+AWS credentials and common troubleshooting
+-----------------------------------------
+
+- Terraform (the AWS provider) looks for credentials in this order: environment variables, `~/.aws/credentials` (profile), SSO/session, and EC2 instance metadata. If you see "No valid credential sources found", ensure one of the following is configured:
+   - Export credentials in your shell:
+      ```bash
+      export AWS_ACCESS_KEY_ID=... 
+      export AWS_SECRET_ACCESS_KEY=...
+      export AWS_SESSION_TOKEN=...   # if using temporary creds
+      ```
+   - Use a named profile and export `AWS_PROFILE` or set `profile` in `provider.tf`.
+   - If you're not on EC2, you can disable IMDS probing to avoid metadata errors:
+      ```bash
+      export AWS_EC2_METADATA_DISABLED=true
+      ```
+
+- If `terraform init` fails trying to download providers, check network/proxy settings or run the init behind a network that allows access to `registry.terraform.io`.
+
+Debugging tips
+--------------
+
+- If Terraform prompts for variables during `plan` or `apply`, either supply them via `-var-file` (recommended) or add defaults to the root `variables.tf` for non-sensitive defaults.
+- To ensure the jumpbox->RDS security-group rule is created automatically, set the root variable `allow_jumpbox_to_rds = true` in your environment tfvars (default is `false`). This prevents Terraform plan-time errors related to unknown cross-module values.
+
 
 ---
 

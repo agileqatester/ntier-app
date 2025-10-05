@@ -43,109 +43,15 @@ resource "aws_subnet" "private" {
   }
 }
 
-resource "aws_eip" "nat" {
-  count = var.nat_mode == "gateway" ? length(var.azs) : 0
-
-  depends_on = [aws_internet_gateway.this]
-}
-
-resource "aws_nat_gateway" "this" {
-  count         = var.nat_mode == "gateway" ? length(var.azs) : 0
-  allocation_id = var.nat_mode == "gateway" ? aws_eip.nat[count.index].id : null
-  subnet_id     = var.nat_mode == "gateway" ? aws_subnet.public[count.index].id : null
-
-  tags = var.nat_mode == "gateway" ? {
-    Name        = "${var.name_prefix}-nat-${count.index + 1}"
-    Environment = var.name_prefix
-  } : {}
-}
-
-// NAT instance (lower-cost option for dev/non-prod). Created only when nat_mode == "instance".
-resource "aws_eip" "nat_instance" {
-  count = var.nat_mode == "instance" ? 1 : 0
-  domain = "vpc"
-}
-
-resource "aws_security_group" "nat_instance" {
-  count = var.nat_mode == "instance" ? 1 : 0
-
-  name        = "${var.name_prefix}-nat-instance-sg"
-  description = "Security group for NAT instance"
-  vpc_id      = aws_vpc.this.id
-
-  # Allow traffic only from the private subnets to the NAT instance
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = var.private_subnet_cidrs
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.name_prefix}-nat-instance-sg"
-  }
-}
-
-resource "aws_instance" "nat_instance" {
-  count         = var.nat_mode == "instance" ? 1 : 0
-  ami           = var.nat_instance_ami != "" ? var.nat_instance_ami : data.aws_ami.nat_instance.id
-  instance_type = "t3a.nano"
-  subnet_id     = aws_subnet.public[0].id
-  associate_public_ip_address = true
-  vpc_security_group_ids = var.nat_mode == "instance" ? [aws_security_group.nat_instance[0].id] : []
-  # NAT instances must have source/destination checks disabled
-  source_dest_check = false
-
-  tags = {
-    Name = "${var.name_prefix}-nat-instance"
-  }
-}
-
-data "aws_ami" "nat_instance" {
-  most_recent = true
-  owners      = ["137112412989"]
-
-  filter {
-    name   = "name"
-    values = ["al2023-ami-*-x86_64"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "platform-details"
-    values = ["Linux/UNIX"]
-  }
-
-  filter {
-    name   = "image-type"
-    values = ["machine"]
-  }
-
-  filter {
-    name   = "block-device-mapping.volume-type"
-    values = ["gp3"]
-  }
+// NAT is provided by the nested nat module.
+module "nat" {
+  source           = "../nat"
+  name_prefix      = var.name_prefix
+  vpc_id           = aws_vpc.this.id
+  public_subnet_ids = aws_subnet.public[*].id
+  azs              = var.azs
+  nat_mode         = var.nat_mode
+  nat_instance_ami = var.nat_instance_ami
 }
 
 
@@ -185,16 +91,14 @@ resource "aws_route" "private_nat_gateway" {
   count                  = var.nat_mode == "gateway" ? length(var.azs) : 0
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.this[count.index].id
+  nat_gateway_id         = module.nat.nat_gateway_ids[count.index]
 }
 
 resource "aws_route" "private_nat_instance" {
   count                  = var.nat_mode == "instance" ? length(var.azs) : 0
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  # For NAT instances, route traffic via the instance's primary network interface.
-  # Use the primary_network_interface_id to avoid provider computed/managed instance_id conflicts.
-  network_interface_id   = aws_instance.nat_instance[0].primary_network_interface_id
+  network_interface_id   = module.nat.nat_instance_primary_network_interface_id
 }
 
 resource "aws_route_table_association" "private" {

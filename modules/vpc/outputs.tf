@@ -15,7 +15,7 @@ output "private_subnet_ids" {
 
 output "nat_gateway_ids" {
   description = "IDs of NAT gateways"
-  value       = aws_nat_gateway.this[*].id
+  value       = try(module.nat.nat_gateway_ids, [])
 }
 
 output "vpc_endpoint_ids" {

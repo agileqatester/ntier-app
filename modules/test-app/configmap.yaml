@@ -4,4 +4,4 @@ metadata:
   name: ${name_prefix}-test-config
 data:
   app.py: |
-${app_py}
+    ${indent(4, app_py)}

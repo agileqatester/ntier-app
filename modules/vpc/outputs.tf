@@ -23,7 +23,7 @@ output "vpc_endpoint_ids" {
   value = {
     s3             = aws_vpc_endpoint.s3_gateway.id
     kinesis        = aws_vpc_endpoint.kinesis_firehose.id
-    opensearch     = aws_vpc_endpoint.opensearch.id
+    # opensearch     = aws_vpc_endpoint.opensearch.id  # Commented out for testing
     secretsmanager = aws_vpc_endpoint.secretsmanager.id
   }
 }

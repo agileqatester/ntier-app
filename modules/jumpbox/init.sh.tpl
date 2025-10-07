@@ -6,7 +6,11 @@ AWS_REGION="${aws_region}"
 CLUSTER_NAME="${cluster_name}"
 
 dnf update -y
-dnf install -y python3 pip ansible postgresql jq unzip curl 
+dnf install -y python3 pip ansible postgresql jq unzip curl amazon-ssm-agent
+
+# Enable and start SSM agent
+systemctl enable amazon-ssm-agent
+systemctl start amazon-ssm-agent 
 
 # Install kubectl
 #curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl

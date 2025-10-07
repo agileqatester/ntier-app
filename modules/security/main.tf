@@ -1,5 +1,9 @@
+resource "random_id" "suffix" {
+  byte_length = 4
+}
+
 resource "aws_iam_role" "eks_service" {
-  name = "${var.name_prefix}-eks-service-role"
+  name = "${var.name_prefix}-eks-service-role-${random_id.suffix.hex}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -19,7 +23,7 @@ resource "aws_iam_role" "eks_service" {
 }
 
 resource "aws_iam_role" "jumpbox_access" {
-  name = "${var.name_prefix}-jumpbox-role"
+  name = "${var.name_prefix}-jumpbox-role-${random_id.suffix.hex}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",

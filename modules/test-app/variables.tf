@@ -20,3 +20,15 @@ variable "enabled" {
   type        = bool
   default     = false
 }
+
+variable "jumpbox_ip" {
+  description = "Public IP of the jumpbox for SSH connection"
+  type        = string
+  default     = ""
+}
+
+variable "public_key_path" {
+  description = "Path to SSH public key (private key will be derived)"
+  type        = string
+  default     = ""
+}

@@ -133,7 +133,7 @@ resource "aws_security_group" "vpc_endpoints" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = var.vpc_cidr_blocks
+    cidr_blocks = [var.vpc_cidr]
   }
 
   egress {
@@ -175,19 +175,20 @@ resource "aws_vpc_endpoint" "kinesis_firehose" {
   }
 }
 
-resource "aws_vpc_endpoint" "opensearch" {
-  vpc_id              = aws_vpc.this.id
-  service_name        = "com.amazonaws.${var.region}.es"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = length(var.endpoint_subnet_cidrs) > 0 ? aws_subnet.endpoint[*].id : aws_subnet.private[*].id
-  security_group_ids  = [var.endpoint_security_group_id != "" ? var.endpoint_security_group_id : aws_security_group.vpc_endpoints.id]
-  private_dns_enabled = true
-
-  tags = {
-    Name        = "${var.name_prefix}-vpce-opensearch"
-    Environment = var.name_prefix
-  }
-}
+# Commented out for testing - OpenSearch endpoint not needed and service name varies by region
+# resource "aws_vpc_endpoint" "opensearch" {
+#   vpc_id              = aws_vpc.this.id
+#   service_name        = "com.amazonaws.${var.region}.es"
+#   vpc_endpoint_type   = "Interface"
+#   subnet_ids          = length(var.endpoint_subnet_cidrs) > 0 ? aws_subnet.endpoint[*].id : aws_subnet.private[*].id
+#   security_group_ids  = [var.endpoint_security_group_id != "" ? var.endpoint_security_group_id : aws_security_group.vpc_endpoints.id]
+#   private_dns_enabled = true
+#
+#   tags = {
+#     Name        = "${var.name_prefix}-vpce-opensearch"
+#     Environment = var.name_prefix
+#   }
+# }
 
 resource "aws_vpc_endpoint" "secretsmanager" {
   vpc_id              = aws_vpc.this.id
@@ -202,3 +203,46 @@ resource "aws_vpc_endpoint" "secretsmanager" {
     Environment = var.name_prefix
   }
 }
+
+# Commented out - let jumpbox use internet directly for SSM
+# resource "aws_vpc_endpoint" "ssm" {
+#   vpc_id              = aws_vpc.this.id
+#   service_name        = "com.amazonaws.${var.region}.ssm"
+#   vpc_endpoint_type   = "Interface"
+#   subnet_ids          = length(var.endpoint_subnet_cidrs) > 0 ? aws_subnet.endpoint[*].id : aws_subnet.public[*].id
+#   security_group_ids  = [var.endpoint_security_group_id != "" ? var.endpoint_security_group_id : aws_security_group.vpc_endpoints.id]
+#   private_dns_enabled = true
+#
+#   tags = {
+#     Name        = "${var.name_prefix}-vpce-ssm"
+#     Environment = var.name_prefix
+#   }
+# }
+#
+# resource "aws_vpc_endpoint" "ssmmessages" {
+#   vpc_id              = aws_vpc.this.id
+#   service_name        = "com.amazonaws.${var.region}.ssmmessages"
+#   vpc_endpoint_type   = "Interface"
+#   subnet_ids          = length(var.endpoint_subnet_cidrs) > 0 ? aws_subnet.endpoint[*].id : aws_subnet.public[*].id
+#   security_group_ids  = [var.endpoint_security_group_id != "" ? var.endpoint_security_group_id : aws_security_group.vpc_endpoints.id]
+#   private_dns_enabled = true
+#
+#   tags = {
+#     Name        = "${var.name_prefix}-vpce-ssmmessages"
+#     Environment = var.name_prefix
+#   }
+# }
+#
+# resource "aws_vpc_endpoint" "ec2messages" {
+#   vpc_id              = aws_vpc.this.id
+#   service_name        = "com.amazonaws.${var.region}.ec2messages"
+#   vpc_endpoint_type   = "Interface"
+#   subnet_ids          = length(var.endpoint_subnet_cidrs) > 0 ? aws_subnet.endpoint[*].id : aws_subnet.public[*].id
+#   security_group_ids  = [var.endpoint_security_group_id != "" ? var.endpoint_security_group_id : aws_security_group.vpc_endpoints.id]
+#   private_dns_enabled = true
+#
+#   tags = {
+#     Name        = "${var.name_prefix}-vpce-ec2messages"
+#     Environment = var.name_prefix
+#   }
+# }

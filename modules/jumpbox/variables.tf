@@ -15,12 +15,8 @@ variable "public_subnet_id" {
 
 variable "public_key_path" {
   type        = string
-  description = "Absolute path to SSH public key (e.g. /Users/me/.ssh/id_rsa.pub). '~' is not expanded by Terraform; provide a full path."
+  description = "Path to SSH public key (e.g. ~/.ssh/id_rsa.pub or /Users/me/.ssh/id_rsa.pub). Tilde (~) is supported."
   default     = ""
-  validation {
-    condition     = var.public_key_path == "" || startswith(var.public_key_path, "/")
-    error_message = "public_key_path must be an absolute path (e.g. /Users/me/.ssh/id_rsa.pub) or empty if using another key management approach"
-  }
 }
 
 variable "ami_id" {

@@ -18,6 +18,14 @@ resource "aws_security_group" "jumpbox" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  egress {
+    description = "HTTPS for SSM endpoints"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   tags = {
     Name = "${var.name_prefix}-jumpbox-sg"
   }
@@ -70,7 +78,7 @@ data "aws_ami" "amazon_linux_2023" {
 resource "aws_key_pair" "jumpbox" {
   count      = var.public_key_path != "" ? 1 : 0
   key_name   = "${var.name_prefix}-jumpbox-key"
-  public_key = var.public_key_path != "" ? file(var.public_key_path) : null
+  public_key = var.public_key_path != "" ? file(pathexpand(var.public_key_path)) : null
 }
 
 resource "aws_instance" "jumpbox" {
@@ -143,7 +151,18 @@ resource "aws_iam_policy" "jumpbox_inline" {
         Action = [
           "ssm:SendCommand",
           "ssm:GetParameters",
-          "ssm:GetParameter"
+          "ssm:GetParameter",
+          "ssm:UpdateInstanceInformation",
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel",
+          "ec2messages:AcknowledgeMessage",
+          "ec2messages:DeleteMessage",
+          "ec2messages:FailMessage",
+          "ec2messages:GetEndpoint",
+          "ec2messages:GetMessages",
+          "ec2messages:SendReply"
         ],
         Resource = "*"
       }

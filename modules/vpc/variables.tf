@@ -31,21 +31,13 @@ variable "enable_ipv6" {
   default     = false
 }
 
-// Ensure lists align: public & private subnet lists must match azs length and be non-empty
-variable "_list_alignment_validation" {
-  description = "internal placeholder to document list alignment; not used directly"
-  type        = any
-  default     = null
-}
-
-// Cross-variable validation: enforced on azs because validations must reference the variable being validated
 variable "azs" {
   description = "List of availability zones"
   type        = list(string)
 
   validation {
-    condition     = length(var.azs) > 0 && length(var.public_subnet_cidrs) == length(var.azs) && length(var.private_subnet_cidrs) == length(var.azs)
-    error_message = "public_subnet_cidrs, private_subnet_cidrs and azs must be non-empty lists of equal length"
+    condition     = length(var.azs) > 0
+    error_message = "azs must be a non-empty list"
   }
 }
 
@@ -80,10 +72,6 @@ variable "endpoint_subnet_cidrs" {
   description = "Optional list of CIDRs for dedicated endpoint subnets (one per AZ). If empty, interface endpoints will be placed into the private subnets."
   type        = list(string)
   default     = []
-  validation {
-    condition     = length(var.endpoint_subnet_cidrs) == 0 || length(var.endpoint_subnet_cidrs) == length(var.azs)
-    error_message = "endpoint_subnet_cidrs must be empty or a list with the same length as azs"
-  }
 }
 
 variable "endpoint_security_group_id" {

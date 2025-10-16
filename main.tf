@@ -17,15 +17,12 @@ module "jumpbox" {
   vpc_id                = module.vpc.vpc_id
   public_subnet_id      = module.vpc.public_subnet_ids[0]
   public_key_path       = var.public_key_path
-  //rds_secret_arn        = var.enable_rds ? module.secrets_manager[0].rds_secret_arn : ""
-  rds_secret_arn        = ""
-  //rds_host              = var.enable_rds ? module.rds[0].rds_host : ""
-  rds_host              = ""
+  rds_secret_arn        = var.enable_rds ? module.secrets_manager[0].rds_secret_arn : ""
+  rds_host              = var.enable_rds ? module.rds[0].rds_host : ""
   my_ip                 = var.my_ip
   aws_region            = var.aws_region
   cluster_name          = module.eks.cluster_name
-  //rds_security_group_id = var.enable_rds ? module.rds[0].rds_security_group_id : ""
-  rds_security_group_id = ""
+  rds_security_group_id = var.enable_rds ? module.rds[0].rds_security_group_id : ""
 }
 
 
@@ -51,26 +48,25 @@ module "security" {
   depends_on           = [module.eks]  # Ensures EKS + OIDC provider are created before IRSA roles
 }
 
+module "rds" {
+  count  = var.enable_rds ? 1 : 0
+  source = "./modules/rds"
+  name_prefix               = var.name_prefix
+  #aws_region          = var.aws_region
+  vpc_id                    = module.vpc.vpc_id
+  private_subnet_ids        = module.vpc.private_subnet_ids
+  eks_security_group_id     = module.eks.eks_cluster_security_group_id
+  jumpbox_security_group_id = module.jumpbox.jumpbox_security_group_id
+  sns_topic_arn             = var.sns_topic_arn
+  create_jumpbox_rule       = var.allow_jumpbox_to_rds
+}
 
-# module "rds" {
-#   count  = var.enable_rds ? 1 : 0
-#   source = "./modules/rds"
-#   name_prefix               = var.name_prefix
-#   #aws_region          = var.aws_region
-#   vpc_id                    = module.vpc.vpc_id
-#   private_subnet_ids        = module.vpc.private_subnet_ids
-#   eks_security_group_id     = module.eks.eks_cluster_security_group_id
-#   jumpbox_security_group_id = module.jumpbox.jumpbox_security_group_id
-#   sns_topic_arn             = var.sns_topic_arn
-#   create_jumpbox_rule       = var.allow_jumpbox_to_rds
-# }
-
-# module "secrets_manager" {
-#   count  = var.enable_rds ? 1 : 0
-#   source = "./modules/secrets_manager"
-#   name_prefix  = var.name_prefix
-#   db_username  = var.db_username
-# }
+module "secrets_manager" {
+  count  = var.enable_rds ? 1 : 0
+  source = "./modules/secrets_manager"
+  name_prefix  = var.name_prefix
+  db_username  = var.db_username
+}
 
 # data "aws_eks_cluster" "this" {
 #   name = module.eks.cluster_name
@@ -137,13 +133,23 @@ module "security" {
 #   sns_topic_arn = "dummy"
 # }
 
-# Commented out - deploy manually after infrastructure is ready
-# module "test_app" {
-#   source      = "./modules/test-app"
-#   name_prefix = var.name_prefix
-#   cluster_name = module.eks.cluster_name
-#   region = var.aws_region
-#   enabled = var.environment == "dev"
-#   jumpbox_ip = module.jumpbox.jumpbox_public_ip
-#   public_key_path = var.public_key_path
-# }
+module "test_app" {
+  source      = "./modules/test-app"
+  name_prefix = var.name_prefix
+  cluster_name = module.eks.cluster_name
+  region = var.aws_region
+  enabled = var.environment == "dev"
+  
+  # Database configuration
+  enable_db        = var.enable_rds
+  db_secret_name   = var.enable_rds ? module.secrets_manager[0].rds_secret_name : ""
+  db_secret_arn    = var.enable_rds ? module.secrets_manager[0].rds_secret_arn : ""
+  db_host          = var.enable_rds ? module.rds[0].rds_host : ""
+  db_name          = var.enable_rds ? var.db_name : ""
+  
+  # OIDC provider for IRSA
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+  
+  depends_on = [module.eks, module.jumpbox]
+}

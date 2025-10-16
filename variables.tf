@@ -27,6 +27,12 @@ variable "db_username" {
   default     = "postgres"
 }
 
+variable "db_name" {
+  description = "RDS database name"
+  type        = string
+  default     = "postgres"
+}
+
 ## ALB
 variable "route53_zone_id" {
   description = "The Route 53 hosted zone ID for the ALB DNS record"
